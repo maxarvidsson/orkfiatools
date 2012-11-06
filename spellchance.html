@@ -1,0 +1,135 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+<title>spellchance</title>
+<style type="text/css">
+#result { font-size: 125%; font-weight: bold; }
+</style>
+<script type="text/javascript">
+function main()
+{
+    var ml = Math.min(100, Math.max(1, document.getElementById('ml').value));
+    var target = Math.min(100, Math.max(1, document.getElementById('target').value));
+    var spell = document.getElementById('spell').value;
+    var race = document.getElementById('race').value;
+    var target_race = document.getElementById('target_race').value;
+    var churches = Math.min(25, Math.max(0, document.getElementById('churches').value));
+    var sod = document.getElementById('sod').checked;
+    
+    var race_fail = 0;
+    var race_cast_fail = 0;
+    var church_protection = 0.03;
+
+    switch (race) {
+        case 'nazgul':
+            race_cast_fail = 0.25;
+            break;
+    }
+    
+    switch (target_race) {
+        case 'nazgul':
+            race_fail = 0.25;
+            break;
+    }
+    
+    var church_fail = churches*church_protection;
+    var base = orkfiaSpellChance(ml, target, spell);
+    var chance = base*(1-church_fail)*(1-sod*0.25)*(1-race_fail)*(1-race_cast_fail);
+    
+    colorResult(chance);
+    chance = Math.round(chance*10000)/100;
+    
+    document.getElementById('chance').innerHTML = chance + '%';
+}
+
+function orkfiaSpellChance(ml, tml, spell)
+{
+    return Math.min(spell*(ml+(ml>tml)*(ml-tml)+10)/(tml+10), 290)/300;
+}
+
+function colorResult(d)
+{
+    var red = 255 - Math.round(d*255);
+    var green = Math.min(255, Math.round(1.5 * d * 255));
+    var rgb = 'rgb(' + red + ',' + green + ',0)';
+    document.getElementById('chance').style.color = rgb;
+}
+
+</script>
+</head>
+<body>
+
+<div id="top">
+<input type="button" value="Calc" onclick="main();" />
+<span id="result">
+Chance: <span id="chance">0%</span>
+</span>
+</div>
+
+<table>
+<tr>
+<td>Your ML:</td>
+<td><input type="text" id="ml" size="5" onkeyup="main();" /></td>
+</tr>
+<tr>
+<td>Target ML:</td>
+<td><input type="text" id="target" size="5" onkeyup="main();" /></td>
+</tr>
+<tr>
+<td colspan="2">
+<select id="spell" onchange="main();">
+<option value="220" selected="selected">Inner Sight</option>
+<option value="200">Vision</option>
+<option value="200">Mystical Rust</option>
+<option value="180">Poison</option>
+<option value="150">Fear</option>
+<option value="150">Fireball</option>
+<option value="150">Lightning Bolt</option>
+<option value="130">Meteor Storm</option>
+<option value="125">Cyclops</option>
+<option value="120">Wrath of XENE</option>
+<option value="100">Earthquake</option>
+<option value="100">Fly over</option>
+<option value="90">Rupture</option>
+<option value="80">Enchantress Salem</option>
+<option value="80">Winds of Distress</option>
+<option value="60">DragonMage</option>
+<option value="60">Enforced Honesty</option>
+<option value="60">Juranimosity</option>
+<option value="60">Magical Void</option>
+</select>
+</td>
+</tr>
+
+<tr>
+<td>Your Race:</td>
+<td><select id="race" onchange="main();">
+<option value="default" selected="selected">Default</option>
+<option value="nazgul">Nazgul</option>
+</select></td>
+</tr>
+
+<tr>
+<td>Target Race:</td>
+<td><select id="target_race" onchange="main();">
+<option value="default" selected="selected">Default</option>
+<option value="nazgul">Nazgul</option>
+</select></td>
+</tr>
+
+<tr>
+<td>Churches(%):</td>
+<td><input type="text" id="churches" size="5" value="0" onkeyup="main();" /></td>
+</tr>
+
+<tr>
+<td>SoD: <input type="checkbox" id="sod" onchange="main();" /></td>
+<td>&nbsp;</td>
+</tr>
+
+</table>
+
+</body>
+</html>
