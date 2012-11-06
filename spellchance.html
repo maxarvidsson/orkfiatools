@@ -8,6 +8,30 @@
 #result { font-size: 125%; font-weight: bold; }
 </style>
 <script type="text/javascript">
+var INTEL = 1;
+var DARK = 2;
+var spells = [
+    ["Inner Sight",      220, INTEL],
+    ["Vision",           200, INTEL],
+    ["Mystical Rust",    200, DARK],
+    ["Poison",           180, DARK],
+    ["Fear",             150, DARK],
+    ["Fireball",         150, DARK],
+    ["Lightning Bolt",   150, DARK],
+    ["Meteor Storm",     130, DARK],
+    ["Cyclops",          125, DARK],
+    ["Wrath of XENE",    120, DARK],
+    ["Earthquake",       100, DARK],
+    ["Fly over",         100, INTEL],
+    ["Rupture",           90, DARK],
+    ["Enchantress Salem", 80, DARK],
+    ["Winds of Distress", 80, DARK],
+    ["DragonMage",        60, DARK],
+    ["Enforced Honesty",  60, DARK],
+    ["Juranimosity",      60, DARK],
+    ["Magical Void",      60, DARK]
+];
+
 function main()
 {
     var ml = Math.min(100, Math.max(1, document.getElementById('ml').value));
@@ -39,8 +63,11 @@ function main()
 
     var sci_fail = sci/100;
     var church_fail = churches*church_protection;
-    var base = orkfiaSpellChance(ml, target, spell);
-    var size_fail = orkfiaSizePenalty(size, target_size);
+    var base = orkfiaSpellChance(ml, target, spells[spell][1]);
+    var size_fail = 0;
+    if (INTEL != spells[spell][2]) {
+        size_fail = orkfiaSizePenalty(size, target_size);
+    }
     var chance = base*(1-church_fail)*(1-sod*0.25)*(1-race_fail)*(1-race_cast_fail)*(1-sci_fail)*(1-size_fail);
     
     colorResult(chance);
@@ -68,7 +95,6 @@ function colorResult(d)
     var rgb = 'rgb(' + red + ',' + green + ',0)';
     document.getElementById('chance').style.color = rgb;
 }
-
 </script>
 </head>
 <body>
@@ -92,25 +118,11 @@ Chance: <span id="chance">0%</span>
 <tr>
 <td colspan="2">
 <select id="spell" onchange="main();">
-<option value="220" selected="selected">Inner Sight</option>
-<option value="200">Vision</option>
-<option value="200">Mystical Rust</option>
-<option value="180">Poison</option>
-<option value="150">Fear</option>
-<option value="150">Fireball</option>
-<option value="150">Lightning Bolt</option>
-<option value="130">Meteor Storm</option>
-<option value="125">Cyclops</option>
-<option value="120">Wrath of XENE</option>
-<option value="100">Earthquake</option>
-<option value="100">Fly over</option>
-<option value="90">Rupture</option>
-<option value="80">Enchantress Salem</option>
-<option value="80">Winds of Distress</option>
-<option value="60">DragonMage</option>
-<option value="60">Enforced Honesty</option>
-<option value="60">Juranimosity</option>
-<option value="60">Magical Void</option>
+<script type="text/javascript">
+for (var i = 0; i < spells.length; i++) {
+    document.write("<option value=\""+i+"\">"+spells[i][0]+"</option>");
+}
+</script>
 </select>
 </td>
 </tr>
