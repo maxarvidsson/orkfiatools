@@ -17,7 +17,10 @@ function main()
     var target_race = document.getElementById('target_race').value;
     var churches = Math.min(25, Math.max(0, document.getElementById('churches').value));
     var sod = document.getElementById('sod').checked;
-    
+    var size = Math.max(1, document.getElementById('size').value);
+    var target_size = Math.max(1, document.getElementById('target_size').value);
+    var sci = Math.min(25, Math.max(0, document.getElementById('sci').value));
+
     var race_fail = 0;
     var race_cast_fail = 0;
     var church_protection = 0.03;
@@ -33,10 +36,12 @@ function main()
             race_fail = 0.25;
             break;
     }
-    
+
+    var sci_fail = sci/100;
     var church_fail = churches*church_protection;
     var base = orkfiaSpellChance(ml, target, spell);
-    var chance = base*(1-church_fail)*(1-sod*0.25)*(1-race_fail)*(1-race_cast_fail);
+    var size_fail = orkfiaSizePenalty(size, target_size);
+    var chance = base*(1-church_fail)*(1-sod*0.25)*(1-race_fail)*(1-race_cast_fail)*(1-sci_fail)*(1-size_fail);
     
     colorResult(chance);
     chance = Math.round(chance*10000)/100;
@@ -47,6 +52,13 @@ function main()
 function orkfiaSpellChance(ml, tml, spell)
 {
     return Math.min(spell*(ml+(ml>tml)*(ml-tml)+10)/(tml+10), 290)/300;
+}
+
+function orkfiaSizePenalty(s, t)
+{
+    if (s*2 < t) return 0.25;
+    if (s*0.6 > t) return Math.min(0.6, 0.9-t/s);
+    return 0;
 }
 
 function colorResult(d)
@@ -120,8 +132,23 @@ Chance: <span id="chance">0%</span>
 </tr>
 
 <tr>
+<td>Your Size:</td>
+<td><input type="text" id="size" size="5" value="" onkeyup="main();" /></td>
+</tr>
+
+<tr>
+<td>Target Size:</td>
+<td><input type="text" id="target_size" size="5" value="" onkeyup="main();" /></td>
+</tr>
+
+<tr>
 <td>Churches(%):</td>
 <td><input type="text" id="churches" size="5" value="0" onkeyup="main();" /></td>
+</tr>
+
+<tr>
+<td>Combat(%):</td>
+<td><input type="text" id="sci" size="5" value="0" onkeyup="main();" /></td>
 </tr>
 
 <tr>
