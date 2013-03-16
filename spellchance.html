@@ -12,17 +12,18 @@ var INTEL = 1;
 var DARK = 2;
 var spells = [
     ["Inner Sight",      220, INTEL],
+    ["Cleanse",          200, DARK],
     ["Vision",           200, INTEL],
-    ["Mystical Rust",    200, DARK],
     ["Poison",           180, DARK],
     ["Fear",             150, DARK],
-    ["Fireball",         150, DARK],
     ["Lightning Bolt",   150, DARK],
-    ["Meteor Storm",     130, DARK],
-    ["Cyclops",          125, DARK],
+    ["Fireball",         120, DARK],
     ["Wrath of XENE",    120, DARK],
-    ["Earthquake",       100, DARK],
     ["Fly over",         100, INTEL],
+    ["Cyclops",           90, DARK],
+    ["Earthquake",        90, DARK],
+    ["Meteor Storm",      90, DARK],
+    ["Mystical Rust",     90, DARK],
     ["Rupture",           90, DARK],
     ["Enchantress Salem", 80, DARK],
     ["Winds of Distress", 80, DARK],
@@ -41,8 +42,6 @@ function main()
     var target_race = document.getElementById('target_race').value;
     var churches = Math.min(25, Math.max(0, document.getElementById('churches').value));
     var sod = document.getElementById('sod').checked;
-    var size = Math.max(1, document.getElementById('size').value);
-    var target_size = Math.max(1, document.getElementById('target_size').value);
     var sci = Math.min(25, Math.max(0, document.getElementById('sci').value));
 
     var race_fail = 0;
@@ -65,10 +64,7 @@ function main()
     var church_fail = churches*church_protection;
     var base = orkfiaSpellChance(ml, target, spells[spell][1]);
     var size_fail = 0;
-    if (INTEL != spells[spell][2]) {
-        size_fail = orkfiaSizePenalty(size, target_size);
-    }
-    var chance = base*(1-church_fail)*(1-sod*0.25)*(1-race_fail)*(1-race_cast_fail)*(1-sci_fail)*(1-size_fail);
+    var chance = base*(1-church_fail)*(1-sod*0.25)*(1-race_fail)*(1-race_cast_fail)*(1-sci_fail);
     
     colorResult(chance);
     chance = Math.round(chance*10000)/100;
@@ -79,13 +75,6 @@ function main()
 function orkfiaSpellChance(ml, tml, spell)
 {
     return Math.min(spell*(ml+(ml>tml)*(ml-tml)+10)/(tml+10), 290)/300;
-}
-
-function orkfiaSizePenalty(s, t)
-{
-    if (s*2 < t) return 0.25;
-    if (s*0.6 > t) return Math.min(0.6, 0.9-t/s);
-    return 0;
 }
 
 function colorResult(d)
@@ -141,16 +130,6 @@ for (var i = 0; i < spells.length; i++) {
 <option value="default" selected="selected">Default</option>
 <option value="nazgul">Nazgul</option>
 </select></td>
-</tr>
-
-<tr>
-<td>Your Size:</td>
-<td><input type="text" id="size" size="5" value="" onkeyup="main();" /></td>
-</tr>
-
-<tr>
-<td>Target Size:</td>
-<td><input type="text" id="target_size" size="5" value="" onkeyup="main();" /></td>
 </tr>
 
 <tr>
