@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+<title>Spell chance</title>
+<link rel="stylesheet" type="text/css" media="all" href="./css/magic.css" />
+<script type="text/javascript" src="./js/magic.js"></script>
+<script type="text/javascript" src="./js/Chart.min.js"></script>
+<style type="text/css">
+</style>
+</head>
+<body>
+
+<noscript>
+Requires Javascript
+</noscript>
+
+<div id="leftside">
+<div id="top">
+<input type="button" value="Calc" onclick="main();" />
+<span id="result">
+Chance: <span id="chance">0%</span>
+</span>
+</div>
+
+<table>
+<tr>
+<td>Your ML:</td>
+<td><input type="text" id="ml" size="5" onkeyup="main();" /></td>
+</tr>
+<tr>
+<td>Target ML:</td>
+<td><input type="text" id="target" size="5" onkeyup="main();" /></td>
+</tr>
+<tr>
+<td colspan="2">
+<select id="spell" onchange="main();">
+<script type="text/javascript">
+for (var i = 0; i < spells.length; i++) {
+    document.write("<option value=\""+i+"\">"+spells[i][0]+"</option>");
+}
+</script>
+</select>
+</td>
+</tr>
+
+<tr>
+<td>Your Race:</td>
+<td><select id="race" onchange="main();">
+<option value="default" selected="selected">Default</option>
+<option value="nazgul">Nazgul</option>
+</select></td>
+</tr>
+
+<tr>
+<td>Target Race:</td>
+<td><select id="target_race" onchange="main();">
+<option value="default" selected="selected">Default</option>
+<option value="nazgul">Nazgul</option>
+</select></td>
+</tr>
+
+<tr>
+<td>Churches(%):</td>
+<td><input type="text" id="churches" size="5" value="0" onkeyup="main();" /></td>
+</tr>
+
+<tr>
+<td>Combat(%):</td>
+<td><input type="text" id="sci" size="5" value="0" onkeyup="main();" /></td>
+</tr>
+
+<tr>
+<td>SoD: <input type="checkbox" id="sod" onchange="main();" /></td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<td>Casts:</td>
+<td><input type="text" id="casts" size="5" value="10" onkeyup="main();" /></td>
+</tr>
+
+</table>
+</div>
+
+<canvas id="chart" width="700" height="300"></canvas>
+
+</body>
+</html>
