@@ -35,7 +35,9 @@ function main()
     var sod = document.getElementById('sod').checked;
     var sci = Math.min(25, Math.max(0, document.getElementById('sci').value));
     var casts = Math.min(200, Math.max(1, document.getElementById('casts').value));
-    document.getElementById('casts').value = casts;
+    if (casts == 200) {
+        document.getElementById('casts').value = casts;
+    }
 
     var race_fail = 0;
     var race_cast_fail = 0;
