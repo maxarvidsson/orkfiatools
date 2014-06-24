@@ -24,6 +24,13 @@ var spells = [
     ["Magical Void",      60, DARK]
 ];
 
+(function(e, s){
+    var l = document.getElementById(e);
+    for (var i = 0; i < s.length; i++) {
+        l.options.add(new Option(s[i][0], i, i == 18, i == 18));
+    }
+})('spell', spells);
+
 function main()
 {
     var ml = Math.min(100, Math.max(1, document.getElementById('ml').value));
@@ -51,6 +58,7 @@ function main()
     
     switch (target_race) {
         case 'nazgul':
+        case 'morihai':
             race_fail = 0.25;
             break;
     }
@@ -61,7 +69,9 @@ function main()
     var size_fail = 0;
     var chance = base*(1-church_fail)*(1-sod*0.25)*(1-race_fail)*(1-race_cast_fail)*(1-sci_fail);
 
-    drawGraph(casts, chance);
+    var canvas = document.getElementById("chart");
+    var dataset = filterData(createData(casts, chance), 1);
+    drawGraph(dataset, canvas);
     
     colorResult(chance);
     chance = Math.round(chance*10000)/100;
@@ -81,65 +91,4 @@ function colorResult(d)
     var green = Math.min(255, Math.round(1.5 * d * 255));
     var rgb = 'rgb(' + red + ',' + green + ',0)';
     document.getElementById('chance').style.color = rgb;
-}
-
-function B(n, k)
-{
-    var b = 1;
-    if (k > n / 2) {
-        k = n - k;
-    }
-    for (var i = 1, c = n - k; i <= k; ++i) {
-        b = b * (c + i) / i;
-    }
-    return b;
-}
-
-function pmf(k, n, p)
-{
-    return B(n, k) * Math.pow(p, k) * Math.pow(1 - p, n - k);
-}
-
-function createData(n, p)
-{
-    var labels = new Array(n + 1);
-    var data = new Array(n + 1);
-    for (var i = 0; i <= n; ++i) {
-        labels[i] = i;
-        data[i] = pmf(i, n, p) * 100;
-    }
-    return {labels:labels, data:data};
-}
-
-function filterData(dataset, cutoff)
-{
-    var labels = [];
-    var data = [];
-    for (var i = 0; i < dataset.data.length; ++i) {
-        if (dataset.data[i] >= cutoff) {
-            labels.push(dataset.labels[i]);
-            data.push(dataset.data[i]);
-        }
-    }
-    return {labels:labels, data:data};
-}
-
-function drawGraph(n, p)
-{
-    dataset = createData(n, p);
-    dataset = filterData(dataset, 1);
-    data = {
-        labels : dataset.labels,
-        datasets : [
-            {
-                fillColor : "rgba(220,220,220,0.5)",
-                strokeColor : "rgba(220,220,220,1)",
-                data : dataset.data
-            }
-        ]
-    }
-    console.log(data);
-
-    var ctx = document.getElementById("chart").getContext("2d");
-    var myNewChart = new Chart(ctx).Bar(data, {animation:false, scaleLabel : "<%=value%>%"});
 }

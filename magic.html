@@ -4,8 +4,6 @@
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
 <title>Spell chance</title>
 <link rel="stylesheet" type="text/css" media="all" href="./css/magic.css" />
-<script type="text/javascript" src="./js/magic.js"></script>
-<script type="text/javascript" src="./js/Chart.min.js"></script>
 <style type="text/css">
 </style>
 </head>
@@ -15,31 +13,24 @@
 Requires Javascript
 </noscript>
 
-<div id="leftside">
-<div id="top">
+<section id="controller">
 <input type="button" value="Calc" onclick="main();" />
 <span id="result">
-Chance: <span id="chance">0%</span>
+Chance: <span id="chance">??</span>
 </span>
-</div>
 
 <table>
 <tr>
 <td>Your ML:</td>
-<td><input type="text" id="ml" size="5" onkeyup="main();" /></td>
+<td><input type="text" id="ml" size="5" value="25" onkeyup="main();" /></td>
 </tr>
 <tr>
 <td>Target ML:</td>
-<td><input type="text" id="target" size="5" onkeyup="main();" /></td>
+<td><input type="text" id="target" size="5" value="25" onkeyup="main();" /></td>
 </tr>
 <tr>
 <td colspan="2">
 <select id="spell" onchange="main();">
-<script type="text/javascript">
-for (var i = 0; i < spells.length; i++) {
-    document.write("<option value=\""+i+"\">"+spells[i][0]+"</option>");
-}
-</script>
 </select>
 </td>
 </tr>
@@ -47,7 +38,7 @@ for (var i = 0; i < spells.length; i++) {
 <tr>
 <td>Your Race:</td>
 <td><select id="race" onchange="main();">
-<option value="default" selected="selected">Default</option>
+<option value="other" selected="selected">Other</option>
 <option value="nazgul">Nazgul</option>
 </select></td>
 </tr>
@@ -55,7 +46,8 @@ for (var i = 0; i < spells.length; i++) {
 <tr>
 <td>Target Race:</td>
 <td><select id="target_race" onchange="main();">
-<option value="default" selected="selected">Default</option>
+<option value="other" selected="selected">Other</option>
+<option value="morihai">Mori Hai</option>
 <option value="nazgul">Nazgul</option>
 </select></td>
 </tr>
@@ -81,9 +73,18 @@ for (var i = 0; i < spells.length; i++) {
 </tr>
 
 </table>
-</div>
+</section>
 
+<section id="graph_out">
 <canvas id="chart" width="700" height="300"></canvas>
+</section>
 
+<footer>
+Updated for age 60.
+</footer>
+
+<script type="text/javascript" src="./js/Chart.min.js"></script>
+<script type="text/javascript" src="./js/graph.js"></script>
+<script type="text/javascript" src="./js/magic.js"></script>
 </body>
 </html>
