@@ -1,10 +1,14 @@
-function main()
-{
+var tr_d = document.getElementById('target_fame_display').style.display;
+document.getElementById('target_fame_display').style.display = "none";
+
+function main() {
+    
     var tpa = Math.min(1000, Math.max(0, document.getElementById('tpa').value));
     var target = Math.min(1000, Math.max(0, document.getElementById('target').value));
     var op = getOp('operations_list');
-    var race = document.getElementById('race').value;
-    var target_race = document.getElementById('target_race').value;
+    var race = getRace('race');
+    var target_race = getTargetRace('target_race');
+    var target_fame = Math.min(50000, Math.max(0, document.getElementById('target_fame').value));
     var ghs = Math.min(25, Math.max(0, document.getElementById('ghs').value));
     var tt = document.getElementById('tt').checked;
     var sci = Math.min(25, Math.max(0, document.getElementById('sci').value));
@@ -14,28 +18,25 @@ function main()
         document.getElementById('casts').value = casts;
     }
 
-    var race_fail = 0;
-    var race_cast_fail = 0;
-    var ghs_protection = 0.03;
-
-    switch (race) {
-        case 'nazgul':
-            race_cast_fail = 0.25;
-            break;
-    }
+    var fame_fail = 0;
     
-    switch (target_race) {
-        case 'nazgul':
-        case 'morihai':
-            race_fail = 0.25;
-            break;
+    var f = document.getElementById('target_fame_display');
+    if (target_race.ability.fame1) {
+        f.style.display = tr_d;
+        fame_fail = target_fame * 0.00001;
+    } else {
+        f.style.display = "none";
     }
+
+    var race_fail = target_race.protection;
+    var race_cast_fail = race.fumble;
+ 
+    var ghs_protection = 0.03;
 
     var sci_fail = sci/100;
     var ghs_fail = ghs*ghs_protection;
     var tt_fail = tt*0.15;
     var tpo = thievesPerOp(land, op);
-    console.log(tpo);
     var max_casts = Math.max(0, Math.floor(tpa * land / tpo));
     if (casts > max_casts) {
         casts = max_casts;
@@ -43,7 +44,7 @@ function main()
     }
     var base = opChance(tpa, target, land, tpo, op.chance, casts);
     var size_fail = 0;
-    var chance = base*(1-ghs_fail)*(1-tt_fail)*(1-race_fail)*(1-race_cast_fail)*(1-sci_fail);
+    var chance = base*(1-ghs_fail)*(1-tt_fail)*(1-race_fail)*(1-race_cast_fail)*(1-sci_fail)*(1-fame_fail);
 
     if (casts > 1) {
         var canvas = document.getElementById("chart");
@@ -99,4 +100,27 @@ function getOp(e) {
 
 function log_x(v, x) {
     return Math.log(v)/Math.log(x);
+}
+
+function getRace(e) {
+    op = selop(e);
+    return {
+        fumble: op.getAttribute('data-fumble') / 100
+    };
+}
+
+function getTargetRace(e) {
+    op = selop(e);
+    abilities = {fame1: false}
+    if (op.hasAttribute('data-ability')) {
+        switch (op.getAttribute('data-ability')) {
+        case 'fame1':
+            abilities.fame1 = true;
+            break;
+        }
+    }
+    return {
+        protection: op.getAttribute('data-protection') / 100,
+        ability: abilities
+    };
 }

@@ -51,17 +51,23 @@ Chance: <span id="chance">??</span>
 <tr>
 <td>Your Race:</td>
 <td><select id="race" onchange="main();">
-<option value="other" selected="selected">Other</option>
-<option value="nazgul">Nazgul</option>
+<option data-fumble="0" selected="selected">Other</option>
+<option data-fumble="25">Nazgul</option>
 </select></td>
 </tr>
 
 <tr>
 <td>Target Race:</td>
 <td><select id="target_race" onchange="main();">
-<option value="other" selected="selected">Other</option>
-<option value="nazgul">Nazgul</option>
+<option data-protection="0" selected="selected">Other</option>
+<option data-protection="25">Nazgul</option>
+<option data-protection="0" data-ability="fame1">High Elf</option>
 </select></td>
+</tr>
+
+<tr id="target_fame_display">
+<td>Fame:</td>
+<td><input type="text" id="target_fame" size="5" value="5000" onkeyup="main();" /></td>
 </tr>
 
 <tr>
