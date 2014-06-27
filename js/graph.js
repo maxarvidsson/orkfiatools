@@ -39,6 +39,8 @@ function filterData(dataset, cutoff)
     return {labels:labels, data:data};
 }
 
+var graph_chart;
+
 function drawGraph(dataset, canvas)
 {
     var data = {
@@ -52,5 +54,8 @@ function drawGraph(dataset, canvas)
         ]
     }
     var ctx = canvas.getContext("2d");
-    var myNewChart = new Chart(ctx).Bar(data, {animation:false, scaleLabel : "<%=value%>%"});
+    if (!graph_chart) {
+        graph_chart = new Chart(ctx);
+    }
+    graph_chart.Bar(data, {animation:false, scaleLabel : "<%=value%>%"});
 }
