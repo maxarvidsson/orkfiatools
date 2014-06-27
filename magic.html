@@ -31,6 +31,26 @@ Chance: <span id="chance">??</span>
 <tr>
 <td colspan="2">
 <select id="spell" onchange="main();">
+<option data-chance="220" data-type="intel">Inner Sight</option>
+<option data-chance="200" data-type="dark">Cleanse</option>
+<option data-chance="200" data-type="intel">Vision</option>
+<option data-chance="180" data-type="dark">Poison</option>
+<option data-chance="150" data-type="dark">Enforced Honesty</option>
+<option data-chance="150" data-type="dark">Fear</option>
+<option data-chance="150" data-type="dark">Juranimosity</option>
+<option data-chance="120" data-type="dark">Lightning Bolt</option>
+<option data-chance="120" data-type="dark">Cyclops</option>
+<option data-chance="120" data-type="dark">Fireball</option>
+<option data-chance="120" data-type="dark">Mystical Rust</option>
+<option data-chance="120" data-type="dark">Wrath of XENE</option>
+<option data-chance="110" data-type="dark">Rupture</option>
+<option data-chance="110" data-type="dark">Meteor Storm</option>
+<option data-chance="100" data-type="intel">Fly Over</option>
+<option data-chance="90" data-type="dark">Earthquake</option>
+<option data-chance="80" data-type="dark">Enchantress Salem</option>
+<option data-chance="80" data-type="dark">Winds of Distress</option>
+<option data-chance="70" data-type="dark" selected="selected">DragonMage</option>
+<option data-chance="60" data-type="dark">Magical Void</option>
 </select>
 </td>
 </tr>
@@ -38,18 +58,24 @@ Chance: <span id="chance">??</span>
 <tr>
 <td>Your Race:</td>
 <td><select id="race" onchange="main();">
-<option value="other" selected="selected">Other</option>
-<option value="nazgul">Nazgul</option>
+<option data-fumble="0" selected="selected">Other</option>
+<option data-fumble="25">Nazgul</option>
 </select></td>
 </tr>
 
 <tr>
 <td>Target Race:</td>
 <td><select id="target_race" onchange="main();">
-<option value="other" selected="selected">Other</option>
-<option value="morihai">Mori Hai</option>
-<option value="nazgul">Nazgul</option>
+<option data-protection="0" selected="selected">Other</option>
+<option data-protection="25">Mori Hai</option>
+<option data-protection="25">Nazgul</option>
+<option data-protection="0" data-ability="fame1">High Elf</option>
 </select></td>
+</tr>
+
+<tr id="target_fame_display">
+<td>Fame:</td>
+<td><input type="text" id="target_fame" size="5" value="5000" onkeyup="main();" /></td>
 </tr>
 
 <tr>
