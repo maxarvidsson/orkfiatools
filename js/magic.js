@@ -1,6 +1,8 @@
 var tr_d = document.getElementById('target_fame_display').style.display;
 document.getElementById('target_fame_display').style.display = "none";
 
+var main_form = document.getElementById('main_form');
+
 function main() {
 
     var ml = Math.min(100, Math.max(1, document.getElementById('ml').value));
@@ -46,6 +48,8 @@ function main() {
     
     document.getElementById('chance').innerHTML = chance + '%';
 
+    var link = document.getElementById('link_input');
+    link.href = "magic.html?" + form2query(main_form);
 }
 
 function orkfiaSpellChance(ml, tml, c) {
@@ -94,3 +98,8 @@ function getTargetRace(e) {
         ability: abilities
     };
 }
+
+if (fillFormFromUrl(main_form)) {
+    main();
+}
+
