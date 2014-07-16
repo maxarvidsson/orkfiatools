@@ -26,6 +26,12 @@ function fillFormFromUrl(form) {
                 ++c;
                 if (e.type == "checkbox") {
                     e.checked = (values[e.id] == 1);
+                } else if (e.type == "select-one") {
+                    for (var j = 0; j < e.options.length; ++j) {
+                        if (e.options[j].value == values[e.id]) {
+                            e.options[j].selected = true;
+                        }
+                    }
                 } else {
                     e.value = values[e.id];
                 }
