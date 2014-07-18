@@ -1,6 +1,8 @@
 var tr_d = document.getElementById('target_fame_display').style.display;
 document.getElementById('target_fame_display').style.display = "none";
 
+var main_form = document.getElementById('main_form');
+
 function main() {
     
     var tpa = Math.min(1000, Math.max(0, document.getElementById('tpa').value));
@@ -57,6 +59,8 @@ function main() {
     
     document.getElementById('chance').innerHTML = chance + '%';
 
+    var link = document.getElementById('link_input');
+    link.href = "thievery.html?" + form2query(main_form);
 }
 
 function opChance(tpa, ttpa, land, tpo, c, n) {
@@ -123,4 +127,8 @@ function getTargetRace(e) {
         protection: op.getAttribute('data-protection') / 100,
         ability: abilities
     };
+}
+
+if (fillFormFromUrl(main_form)) {
+    main();
 }

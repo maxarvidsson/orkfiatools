@@ -14,6 +14,7 @@ Requires Javascript
 </noscript>
 
 <section id="controller">
+<form id="main_form">
 <input type="button" value="Calc" onclick="main();" />
 <span id="result">
 Chance: <span id="chance">??</span>
@@ -91,6 +92,7 @@ Chance: <span id="chance">??</span>
 </tr>
 
 </table>
+</form>
 </section>
 
 <section id="graph_out">
@@ -98,11 +100,12 @@ Chance: <span id="chance">??</span>
 </section>
 
 <footer>
-Test version. Updated for age 60.
+Test version. Updated for age 60. <a href="#" id="link_input">Link</a>
 </footer>
 
 <script type="text/javascript" src="./js/Chart.min.js"></script>
 <script type="text/javascript" src="./js/graph.js"></script>
+<script type="text/javascript" src="./js/misc.js"></script>
 <script type="text/javascript" src="./js/thievery.js"></script>
 </body>
 </html>
