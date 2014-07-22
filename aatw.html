@@ -203,12 +203,6 @@ function setTimestamps(ts) {
     db.set("timestamps", (ts ? "1" : ""));
     timestamp_input.checked = ts;
 }
-function setNotifications(v) {
-    debug("setNotifications(" + v + "), typeof param: " + typeof v);
-    notifications = v;
-    db.set("notifications", (v ? "1" : ""));
-    notifications_input.checked = v;
-}
 
 // init nick
 (function() {
@@ -241,19 +235,6 @@ function setNotifications(v) {
     setTimestamps(ts);
 })();
 
-// init timestamp
-(function() {
-    var v = db.get("notifications");
-    if (typeof v !== "string") {
-        v = false;
-    } else if (v.length > 0) {
-        v = true;
-    } else {
-        v = false;
-    }
-    setNotifications(v);
-})();
-
 username_input.onchange = function() {
     setNick(username_input.value);
 };
@@ -266,10 +247,97 @@ timestamp_input.onchange = function() {
     setTimestamps(timestamp_input.checked);
 };
 
-notifications_input.onchange = function() {
-    setNotifications(notifications_input.checked);
-};
+// Notifications --------------------------------------------------------------
+var notify = new (function() {
+    var self = this;
+    this.message = function(msg) {
+        debug("notify.message: " + msg.message);
+        if (typeof document.hasFocus === "function" && !document.hasFocus()) {
+            var n = new Notification(msg.sender + " writes:", {
+                body: msg.message
+            });
+        }
+    };
+    this.isSupported = function() {
+        return "Notification" in window;
+    };
+    this.getPermissionLevel = function() {
+        return Notification.permission;
+    };
+    this.hasPermission = function() {
+        return Notification.permission === "granted";
+    };
+    // denied could be browser doesnt allow any page
+    // or they pressed deny once and browser remembers
+    this.isDenied = function() {
+        return Notification.permission === "denied";
+    };
+    this.requestPermission = function(callback) {
+        Notification.requestPermission(function(permission) {
+            debug("Requesting permission.... " + permission);
+            // According to mozilla dev
+            if (!("permission" in Notification)) {
+                Notification.permission = permission;
+            }
+            if (typeof callback === "function") {
+                callback();
+            }
+        });
+    };
+});
+function setNotifications(v) {
+    debug("setNotifications(" + v + "), typeof param: " + typeof v);
+    notifications = v;
+    db.set("notifications", (v ? "1" : ""));
+    notifications_input.checked = v;
+}
+// init notification
+(function() {
+    var v;
+    if (!notify.isSupported()) {
+        notifications_input.disabled = "disabled";
+        v = false;
+    } else if (!notify.hasPermission()) {
+        v = false;
+    } else {
+        v = db.get("notifications");
+        if (typeof v !== "string") {
+            v = false;
+        } else if (v.length > 0) {
+            v = true;
+        } else {
+            v = false;
+        }
+    }
+    setNotifications(v);
+    if (notify.isSupported()) {
+        notifications_input.onchange = function() {
+            var checked = notifications_input.checked;
+            if (checked) {
+                if (notify.isDenied()) {
+                    setNotifications(false);
+                    alert("Your browser-settings does not allow notifications on this site");
+                } else if (!notify.hasPermission()) {
+                    setNotifications(false);
+                    notify.requestPermission(function() {
+                        // runs very much async from rest
+                        setNotifications(notify.hasPermission());
+                    });
+                } else {
+                    setNotifications(true);
+                }
+            } else {
+                setNotifications(false);
+            }
+        };
+    }
+})();
 
+debug("Browser supports notifications: " + notify.isSupported());
+debug("Notifications has permission:   " + notify.hasPermission());
+debug("Notifications permission level: " + notify.getPermissionLevel());
+
+// Page title notifications ----------------------------------------------------
 var page_title;
 // not supported in all browsers :S
 debug("typeof document.hasFocus == " + typeof document.hasFocus);
@@ -398,6 +466,9 @@ var chatbox = new (function() {
         }
         var i = msg.message.search(new RegExp(myNick, "i"));
         if (i >= 0) {
+            if (notifications) {
+                notify.message(msg);
+            }
             msg.message = msg.message.substr(0, i)
                         + '<span class="my_nick">'
                         + msg.message.substr(i, myNick.length)
