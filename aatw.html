@@ -285,7 +285,9 @@ username_input.onchange = function() {
 };
 
 token_input.onchange = function() {
-    setToken(token_input.value);
+    // be nice to people
+    var temp = token_input.value.replace(/[^\w\n]/g, "");
+    setToken(temp);
 };
 
 timestamp_input.onchange = function() {
