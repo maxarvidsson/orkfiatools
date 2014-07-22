@@ -33,8 +33,9 @@ body {
     margin: 0px;
     padding: 0px;
     height: 25px;
-    border-bottom: 1px solid black;
+    border-bottom: 1px solid Black;
     overflow: hidden;
+    font-weight: bold;
 }
 #channels li {
     height: 15px;
@@ -43,7 +44,7 @@ body {
     padding: 5px 5px;
 }
 #channels .tab_new {
-    background-color: lime;
+    background-color: Pink;
 }
 #channels .tab_alert {
     background-color: Orange;
@@ -52,7 +53,7 @@ body {
     cursor: pointer;
 }
 #channels .tab_active {
-    background-color: pink;
+    background-color: Silver;
 }
 .room {
     position: fixed;
@@ -65,10 +66,11 @@ body {
     font-size: 1em;
 }
 .my_nick {
-    color: red;
+    color: Maroon;
+    font-weight: bold;
 }
 .timestamp {
-    color: gray;
+    color: Gray;
 }
 #textarea_wrapper {
     position: fixed;
@@ -78,8 +80,8 @@ body {
     height: 50px;
 }
 #chat_input {
-    border: 1px 0px 0px 0px
-    border-color: black;
+    border-width: 1px 0px 0px 0px;
+    border-color: Black;
     height: 100%;
     width: 100%;
     padding: 0px;
@@ -91,8 +93,8 @@ body {
     right: 0px;
     bottom: 0px;
     height: 32px;
-    background-color: black;
-    color: black;
+    background-color: Black;
+    color: Black;
 }
 #Settings label {
     display: block;
@@ -272,17 +274,6 @@ if (typeof document.hasFocus !== "function") {
     };
 }
 
-//  var color_table = ["pink", "purple", "lime", "yellow"];
-//  var name_list = {};
-//  var next_color = 0;
-//  function name2color(name) {
-//      if (typeof name_list[name] === "undefined") {
-//          name_list[name] = color_table[next_color];
-//          next_color = (next_color + 1) % color_table.length;
-//      }
-//      return name_list[name];
-//  }
-
 var color_table = {};
 function name2color(name) {
     debug("name2color(" + name + ")");
@@ -310,7 +301,7 @@ function name2color(name) {
                 g = 0;
             }
         }
-        color_table[name] = "rgba(" + r + ", " + g + ", " + b + ", 1)";
+        color_table[name] = "rgb(" + r + ", " + g + ", " + b + ")";
         debug(name + " = " + color_table[name]);
     }
     return color_table[name];
