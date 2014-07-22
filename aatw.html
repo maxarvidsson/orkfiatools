@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Aatw+chat</title>
+<meta charset="UTF-8">
+<style>
+body {
+    margin: 0px;
+    font-family: "New Courier", monospace;
+    /* Same size as aatw */
+    font-size: 11px;
+}
+#chat {
+    position: absolute;
+}
+#iframe_wrapper {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    bottom: 0px;
+    width: 1000px;
+}
+#aatw {
+    height: 100%;
+    width: 100%;
+    border: 0px;
+}
+#channels {
+    position: fixed;
+    top: 0px;
+    left: 1000px;
+    right: 0px;
+    margin: 0px;
+    padding: 0px;
+    height: 25px;
+    border-bottom: 1px solid black;
+    overflow: hidden;
+}
+#channels li {
+    height: 15px;
+    list-style-type: none;
+    display: inline-block;
+    padding: 5px 5px;
+}
+#channels .tab_new {
+    background-color: lime;
+}
+#channels .tab_alert {
+    background-color: Orange;
+}
+#channels li:hover {
+    cursor: pointer;
+}
+#channels .tab_active {
+    background-color: pink;
+}
+.room {
+    position: fixed;
+    top: 26px;
+    left: 1000px;
+    right: 0px;
+    bottom: 83px;
+    padding-left: 10px;
+    overflow: scroll;
+    font-size: 1em;
+}
+.my_nick {
+    color: red;
+}
+.timestamp {
+    color: gray;
+}
+#textarea_wrapper {
+    position: fixed;
+    left: 1000px;
+    right: 0px;
+    bottom: 32px;
+    height: 50px;
+}
+#chat_input {
+    border: 1px 0px 0px 0px
+    border-color: black;
+    height: 100%;
+    width: 100%;
+    padding: 0px;
+    resize: none;
+}
+#footer {
+    position: fixed;
+    left: 1000px;
+    right: 0px;
+    bottom: 0px;
+    height: 32px;
+    background-color: black;
+    color: black;
+}
+#Settings label {
+    display: block;
+}
+#Settings label span {
+    display: inline-block;
+    width: 100px;
+}
+#Settings button {
+    margin-left: 50px;
+}
+</style>
+<script type="text/javascript">
+var server = "http://lallafa.aatw.local";
+var port = "1337";
+function debug(msg) {
+    console.log(msg);
+}
+</script>
+</head>
+<body>
+<div id="chat">
+  <ul id="channels"></ul>
+  <div id="Settings" class="room">
+      <label><span>Username:</span><input type="text" id="username_input" maxlength="20"></label>
+      <label><span>Token:</span><input type="text" id="token_input"></label>
+      <label><span>Timestamps:</span><input type="checkbox" id="timestamp_input"></label>
+      <button id="button_connect">Connect to chat</button>
+  </div>
+</div>
+<div id="textarea_wrapper">
+<textarea id="chat_input"></textarea>
+</div>
+<div id="iframe_wrapper">
+</div>
+<footer id="footer">AATW+chat-mix by max</footer>
+<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+<script type="text/javascript">
+var el = document.createElement("script");
+el.src = server + ':' + port + "/socket.io/socket.io.js";
+document.body.appendChild(el);
+
+var iframe = document.createElement("iframe");
+iframe.id = "aatw";
+iframe.src = server;
+document.getElementById("iframe_wrapper").appendChild(iframe);
+
+var db = new (function() {
+    var self = this;
+    var temp = {};
+    this.get = function(key) {
+        if (typeof localStorage !== "undefined") {
+            return localStorage.getItem(key);
+        } else {
+            return temp[key];
+        }
+    };
+    this.set = function(key, value) {
+        if (typeof localStorage !== "undefined") {
+            localStorage.setItem(key, value);
+        } else {
+            temp[key] = value;
+        }
+    }
+});
+
+var username_input = document.getElementById("username_input");
+var token_input = document.getElementById("token_input");
+var timestamp_input = document.getElementById("timestamp_input");
+var textarea = document.getElementById("chat_input");
+var button_connect = document.getElementById("button_connect");
+button_connect.onclick = function () {
+    button_connect.onclick = null;
+    button_connect.disabled = "disabled";
+    username_input.disabled = "disabled";
+    token_input.disabled = "disabled";
+    timestamp_input.disabled = "disabled";
+    connect();
+};
+
+var myNick, chatToken, timestamps;
+function setNick(nick) {
+    debug("setNick(" + nick + "), typeof nick: " + typeof nick);
+    nick = nick.trim().replace(" ", "_");
+    if (nick.length == 0) {
+        nick = "guest" + Math.floor(Math.random() * 10000);
+    }
+    myNick = nick;
+    db.set("username", nick);
+    username_input.value = nick;
+}
+function setToken(token) {
+    debug("setToken(" + token + "), typeof token: " + typeof token);
+    chatToken = token;
+    db.set("token", token);
+    token_input.value = token;
+}
+function setTimestamps(ts) {
+    debug("setTimestamps(" + ts + "), typeof ts: " + typeof ts);
+    timestamps = ts;
+    db.set("timestamps", (ts ? "1" : ""));
+    timestamp_input.checked = ts;
+}
+
+// init nick
+(function() {
+    var nick = db.get("username");
+    if (typeof nick !== "string") {
+        nick = "";
+    }
+    setNick(nick);
+})();
+
+// init token
+(function() {
+    var token = db.get("token");
+    if (typeof token !== "string") {
+        token = "";
+    }
+    setToken(token);
+})();
+
+// init timestamp
+(function() {
+    var ts = db.get("timestamps");
+    if (typeof ts !== "string") {
+        ts = false;
+    } else if (ts.length > 0) {
+        ts = true;
+    } else {
+        ts = false;
+    }
+    setTimestamps(ts);
+})();
+
+username_input.onchange = function() {
+    setNick(username_input.value);
+};
+
+token_input.onchange = function() {
+    setToken(token_input.value);
+};
+
+timestamp_input.onchange = function() {
+    setTimestamps(timestamp_input.checked);
+};
+
+var page_title;
+// not supported in all browsers :S
+debug("typeof document.hasFocus == " + typeof document.hasFocus);
+if (typeof document.hasFocus !== "function") {
+    page_title = new (function() {
+        this.reset = function() {};
+        this.update = function() {};
+    });
+} else {
+    page_title = new (function() {
+        var orig = document.title;
+        var count = 0;
+        this.reset = function() {
+            count = 0;
+            document.title = orig;
+        };
+        this.update = function() {
+            var has_focus = document.hasFocus();
+            debug("update page title? document has focus: " + has_focus);
+            if (!has_focus) {
+                count = count + 1;
+                document.title = orig + " " + count;
+            }
+        };
+    });
+    // kinda works
+    window.onfocus = function() {
+        debug("window gained focus");
+        page_title.reset();
+    };
+}
+
+//  var color_table = ["pink", "purple", "lime", "yellow"];
+//  var name_list = {};
+//  var next_color = 0;
+//  function name2color(name) {
+//      if (typeof name_list[name] === "undefined") {
+//          name_list[name] = color_table[next_color];
+//          next_color = (next_color + 1) % color_table.length;
+//      }
+//      return name_list[name];
+//  }
+
+var color_table = {};
+function name2color(name) {
+    debug("name2color(" + name + ")");
+    name = name.toLowerCase();
+    var last = name.charCodeAt(name.length - 1);
+    if (last < 97 || 122 < last) {
+        name = name.substr(0, name.length - 1);
+    }
+    if (typeof color_table[name] === "undefined") {
+        var r = 0, g = 0, b = 0, chr;
+        for (var i = 0; i < name.length; ++i) {
+            chr = name.charCodeAt(i);
+            r += chr * 31;
+            g += chr * 17;
+            b += chr * 47;
+        }
+        r = r % 256;
+        g = g % 256;
+        b = b % 256;
+        if (r+g+b > 384) {
+            // dont create yellow by setting blue = 0 :E
+            if (r < g) {
+                r = 0;
+            } else {
+                g = 0;
+            }
+        }
+        color_table[name] = "rgba(" + r + ", " + g + ", " + b + ", 1)";
+        debug(name + " = " + color_table[name]);
+    }
+    return color_table[name];
+}
+
+var chatbox = new (function() {
+    var self = this;
+    var tabs = {};
+    var rooms = {};
+    var current = "";
+    var $chat_tabs_ul = $("#chat").find("ul");
+    this.addRoom = function(id) {
+        self._addTab(id);
+        self._addContent(id);
+        if (current == "") {
+            tabs[id].addClass("tab_active");
+            rooms[id].css("display", "block");
+            current = id;
+        } else {
+            rooms[id].css("display", "none");
+        }
+    };
+    this.selectRoom = function(id) {
+        if (current != id) {
+            tabs[id].addClass("tab_active");
+            rooms[id].css("display", "block");
+        }
+        if (current != "") {
+            tabs[current].removeClass("tab_active");
+            rooms[current].css("display", "none");
+        }
+        current = id;
+    };
+    this._addTab = function(id) {
+        var title = id.replace("_", " ");
+        if (title.substr(0, 8) == "Alliance") {
+            title = "Alliance";
+        }
+        var $tab = $("<li>" + title + "</li>");
+        tabs[id] = $tab;
+        $tab.click(function() {
+            self.selectRoom(id);
+            tabs[id].removeClass("tab_new");
+            tabs[id].removeClass("tab_alert");
+        });
+        $tab.appendTo($chat_tabs_ul);
+    };
+    this._addContent = function(id) {
+        var $div = $('<div id="' + id + '" class="room"></div>');
+        self._addRoom(id, $div);
+        $div.appendTo($("#chat"));
+    };
+    this._addRoom = function(id, $div) {
+        rooms[id] = $div;
+        //$div.css("height", room_height);
+        $div.css("display", "none");
+    };
+    this.currentRoom = function() {
+        return current;
+    };
+    this.highlightRoom = function(msg) {
+        debug("HL: " + msg.room + " (current: " + current + ")");
+        page_title.update();
+        if (msg.sender == myNick) {
+            return msg;
+        }
+        var i = msg.message.search(new RegExp(myNick, "i"));
+        if (i >= 0) {
+            msg.message = msg.message.substr(0, i)
+                        + '<span class="my_nick">'
+                        + msg.message.substr(i, myNick.length)
+                        + "</span>"
+                        + msg.message.substr(i + myNick.length);
+        }
+        if (current == msg.room) {
+            return msg;
+        }
+        if (i >= 0) {
+            tabs[msg.room].removeClass("tab_new");
+            tabs[msg.room].addClass("tab_alert");
+        } else if (!tabs[msg.room].hasClass("tab_alert")) {
+            tabs[msg.room].addClass("tab_new");
+        }
+        return msg;
+    };
+    this.room = function(id) {
+        return rooms[id];
+    };
+});
+
+chatbox._addTab("Settings");
+chatbox._addRoom("Settings", $("#Settings"));
+chatbox.selectRoom("Settings");
+
+function msgFormat(msg) {
+    if (msg.sender.substr(0, 4) == 'IRC ') {
+        msg.sender = msg.sender.substr(4);
+    }
+    var sender = '<strong style="color:' + name2color(msg.sender) + ';">' + msg.sender + '</strong>';
+    var time = "";
+    if (timestamps) {
+        time = '<span class="timestamp">' + msg.serverTime + '</span> ';
+    }
+    return time + '&lt;' + sender + '&gt; ' + msg.message + '<br />';
+}
+function filterMsg(msg) {
+    return (msg.room == "Global" && msg.sender == "IRC Stats");
+}
+function connect() {
+    var socket = io.connect(server + ":" + port);
+
+    socket.on("connect", function() {
+        socket.emit("join", myNick, chatToken);
+    });
+
+    socket.on("rooms", function(rooms){
+        for (i in rooms) {
+            if ($("#" + rooms[i]).length == 0) {
+                chatbox.addRoom(rooms[i]);
+                socket.emit("backlog", rooms[i]);
+            } 
+        }
+    });
+
+    socket.on("backlog", function(msgs) {
+        for (i in msgs) {
+            msg = msgs[i];
+            if (!filterMsg(msg)) {
+                chat_div = chatbox.room(msg.room);
+                chat_div.append(msgFormat(msg));
+                chat_div.scrollTop(9999999);
+            }
+        }
+    });
+
+    socket.on("chat", function(msg) {
+        if (!filterMsg(msg)) {
+            chat_div = chatbox.room(msg.room);
+            msg = chatbox.highlightRoom(msg);
+            chat_div.append(msgFormat(msg));
+            debug(chat_div.scrollTop() + ", " + chat_div.height() + ", " + chat_div[0].scrollHeight);
+            if (chat_div.scrollTop() + chat_div.height() >= chat_div[0].scrollHeight) {
+                chat_div.scrollTop(9999999);
+            }
+        }
+    });
+
+    function sendMsg(textarea) {
+        var message = textarea.value;
+        textarea.value = "";
+        var lines = message.split("\n");
+        for (var i = 0; i < lines.length; ++i) {
+            socket.emit("chat", chatbox.currentRoom(), lines[i]);
+        }
+    }
+
+    // when the client hits ENTER on their keyboard
+    textarea.onkeypress = function(event) {
+        var e = event || window.event;
+        if (e.which == 13) {
+            if (chatbox.currentRoom() !== "Settings") {
+                sendMsg(textarea);
+            }
+            return false;
+        }
+    };
+};
+
+</script>
+</body>
+</html>
