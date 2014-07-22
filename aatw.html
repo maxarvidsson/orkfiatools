@@ -108,6 +108,29 @@ body {
 #Settings button {
     margin-left: 50px;
 }
+#Settings dt {
+    margin: 10px 0px;
+    text-decoration: underline;
+}
+#Settings dt:hover {
+    cursor: pointer;
+}
+#Settings dd {
+    display: none;
+    margin: 0px 40px;
+}
+.url {
+    font-style: italic;
+}
+#Settings .url {
+    display: block;
+    padding: 5px;
+}
+#Settings dd em {
+    color: Red;
+    font-style: italic;
+    font-weight: bold;
+}
 </style>
 <script type="text/javascript">
 var server = "http://lallafa.aatw.local";
@@ -126,6 +149,21 @@ function debug(msg) {
       <label><span>Timestamps:</span><input type="checkbox" id="timestamp_input"></label>
       <label><span>Notifications:</span><input type="checkbox" id="notifications_input"></label>
       <button id="button_connect">Connect to chat</button>
+      <dl>
+        <dt>What is "token"?</dt>
+        <dd>Its a unique string given to you by the game. It is used to
+            identify yourself to the chatserver. If you dont have an account
+            you can still connect to the global channel, just leave it blank.
+        </dd>
+        <dt>What is my token?</dt>
+        <dd>For security purposes your browser will not let this page fetch
+            your token automagically (thats good!), so some manual work is
+            requried: Login to the game and then go to this address: 
+            <span class="url">https://alliancesatwar.com/api/dbg/user-info/</span>
+            At the the bottom you will find your token.
+            <br /><em>Dont share your token with anyone!</em>
+        </dd>
+      </dl>
   </div>
 </div>
 <div id="textarea_wrapper">
@@ -144,6 +182,13 @@ var iframe = document.createElement("iframe");
 iframe.id = "aatw";
 iframe.src = server;
 document.getElementById("iframe_wrapper").appendChild(iframe);
+
+$("#Settings").find('dt').each(function() {
+    var $this = $(this);
+    $this.click(function() {
+        $this.next().toggle();
+    });
+});
 
 var db = new (function() {
     var self = this;
