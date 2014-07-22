@@ -334,8 +334,10 @@ function setNotifications(v) {
 })();
 
 debug("Browser supports notifications: " + notify.isSupported());
-debug("Notifications has permission:   " + notify.hasPermission());
-debug("Notifications permission level: " + notify.getPermissionLevel());
+if (notify.isSupported()) {
+    debug("Notifications has permission:   " + notify.hasPermission());
+    debug("Notifications permission level: " + notify.getPermissionLevel());
+}
 
 // Page title notifications ----------------------------------------------------
 var page_title;
