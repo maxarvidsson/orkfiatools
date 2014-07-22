@@ -124,6 +124,7 @@ function debug(msg) {
       <label><span>Username:</span><input type="text" id="username_input" maxlength="20"></label>
       <label><span>Token:</span><input type="text" id="token_input"></label>
       <label><span>Timestamps:</span><input type="checkbox" id="timestamp_input"></label>
+      <label><span>Notifications:</span><input type="checkbox" id="notifications_input"></label>
       <button id="button_connect">Connect to chat</button>
   </div>
 </div>
@@ -166,6 +167,7 @@ var db = new (function() {
 var username_input = document.getElementById("username_input");
 var token_input = document.getElementById("token_input");
 var timestamp_input = document.getElementById("timestamp_input");
+var notifications_input = document.getElementById("notifications_input");
 var textarea = document.getElementById("chat_input");
 var button_connect = document.getElementById("button_connect");
 button_connect.onclick = function () {
@@ -174,10 +176,11 @@ button_connect.onclick = function () {
     username_input.disabled = "disabled";
     token_input.disabled = "disabled";
     timestamp_input.disabled = "disabled";
+    notifications_input.disabled = "disabled";
     connect();
 };
 
-var myNick, chatToken, timestamps;
+var myNick, chatToken, timestamps, notifications;
 function setNick(nick) {
     debug("setNick(" + nick + "), typeof nick: " + typeof nick);
     nick = nick.trim().replace(" ", "_");
@@ -199,6 +202,12 @@ function setTimestamps(ts) {
     timestamps = ts;
     db.set("timestamps", (ts ? "1" : ""));
     timestamp_input.checked = ts;
+}
+function setNotifications(v) {
+    debug("setNotifications(" + v + "), typeof param: " + typeof v);
+    notifications = v;
+    db.set("notifications", (v ? "1" : ""));
+    notifications_input.checked = v;
 }
 
 // init nick
@@ -232,6 +241,19 @@ function setTimestamps(ts) {
     setTimestamps(ts);
 })();
 
+// init timestamp
+(function() {
+    var v = db.get("notifications");
+    if (typeof v !== "string") {
+        v = false;
+    } else if (v.length > 0) {
+        v = true;
+    } else {
+        v = false;
+    }
+    setNotifications(v);
+})();
+
 username_input.onchange = function() {
     setNick(username_input.value);
 };
@@ -242,6 +264,10 @@ token_input.onchange = function() {
 
 timestamp_input.onchange = function() {
     setTimestamps(timestamp_input.checked);
+};
+
+notifications_input.onchange = function() {
+    setNotifications(notifications_input.checked);
 };
 
 var page_title;
