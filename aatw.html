@@ -346,7 +346,7 @@ var notify = new (function() {
         }
     };
     this.isSupported = function() {
-        return false && "Notification" in window;
+        return "Notification" in window;
     };
     this.getPermissionLevel = function() {
         return Notification.permission;
