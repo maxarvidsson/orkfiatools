@@ -61,7 +61,7 @@ body {
     left: 1000px;
     right: 0px;
     bottom: 83px;
-    padding-left: 10px;
+    padding: 7px;
     word-wrap: break-word;
     overflow-x: hidden;
     overflow-y: scroll;
@@ -623,11 +623,15 @@ function msgFormat(msg) {
 function filterMsg(msg) {
     return (msg.room == "Global" && msg.sender == "IRC Stats");
 }
-function isScrollAtBottom($el) {
-    var el = $el[0];
-    // how far down we have scrolled + "view"-height of element >= total height of element
-    debug("isScrollAtBottom: " + $el.scrollTop() + " + " + $el.height() + " >= " + el.scrollHeight);
-    return ($el.scrollTop() + $el.height() >= el.scrollHeight);
+function isScrollAtBottom(el) {
+    // works better without jquery
+    var isAtBottom = el.scrollTop + el.clientHeight === el.scrollHeight;
+    debug("isScrollAtBottom: " + el.scrollTop + " + "
+          + el.clientHeight + " === " + el.scrollHeight + " (" + isAtBottom + ")");
+    return isAtBottom;
+}
+function scrollToBottom(el) {
+    el.scrollTop = 9999999;
 }
 function connect() {
     loadingAnim.style.display = "inline";
@@ -683,7 +687,7 @@ function connect() {
             if (!filterMsg(msg)) {
                 var $room = chatbox.room(msg.room);
                 $room.append(msgFormat(msg));
-                $room.scrollTop(9999999);
+                scrollToBottom($room[0]);
             }
         }
     });
@@ -692,10 +696,10 @@ function connect() {
         if (!filterMsg(msg)) {
             var $room = chatbox.room(msg.room);
             msg = chatbox.highlightRoom(msg);
-            var scrollDown = isScrollAtBottom($room);
+            var scrollDown = isScrollAtBottom($room[0]);
             $room.append(msgFormat(msg));
             if (scrollDown) {
-                $room.scrollTop(9999999);
+                scrollToBottom($room[0]);
             }
         }
     });
@@ -704,9 +708,12 @@ function connect() {
         var message = textarea.value;
         textarea.value = "";
         var lines = message.split("\n");
+        var room = chatbox.currentRoom();
         for (var i = 0; i < lines.length; ++i) {
-            socket.emit("chat", chatbox.currentRoom(), lines[i]);
+            socket.emit("chat", room, lines[i]);
         }
+        var $room = chatbox.room(room);
+        scrollToBottom($room[0]);
     }
 
     // when the client hits ENTER on their keyboard
