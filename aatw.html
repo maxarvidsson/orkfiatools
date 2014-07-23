@@ -485,20 +485,20 @@ var chatbox = new (function() {
         self._addContent(id);
         if (current == "") {
             tabs[id].addClass("tab_active");
-            rooms[id].css("display", "block");
+            rooms[id].css("visibility", "visible");
             current = id;
         } else {
-            rooms[id].css("display", "none");
+            rooms[id].css("visibility", "hidden");
         }
     };
     this.selectRoom = function(id) {
         if (current != id) {
             tabs[id].addClass("tab_active");
-            rooms[id].css("display", "block");
+            rooms[id].css("visibility", "visible");
         }
         if (current != "") {
             tabs[current].removeClass("tab_active");
-            rooms[current].css("display", "none");
+            rooms[current].css("visibility", "hidden");
         }
         current = id;
     };
@@ -524,7 +524,7 @@ var chatbox = new (function() {
     this._addRoom = function(id, $div) {
         rooms[id] = $div;
         //$div.css("height", room_height);
-        $div.css("display", "none");
+        $div.css("visibility", "hidden");
     };
     this.currentRoom = function() {
         return current;
@@ -580,9 +580,11 @@ function msgFormat(msg) {
 function filterMsg(msg) {
     return (msg.room == "Global" && msg.sender == "IRC Stats");
 }
-function scrollIsAtBottom($div) {
-    debug("scrollIsAtBottom: " + $div.scrollTop() + " + " + $div.height() + " >= " + $div[0].scrollHeight);
-    return ($div.scrollTop() + $div.height() >= $div[0].scrollHeight);
+function isScrollAtBottom($el) {
+    var el = $el[0];
+    // how far down we have scrolled + "view"-height of element >= total height of element
+    debug("isScrollAtBottom: " + $el.scrollTop() + " + " + $el.height() + " >= " + el.scrollHeight);
+    return ($el.scrollTop() + $el.height() >= el.scrollHeight);
 }
 function connect() {
     var socket = io.connect(server + ":" + port);
@@ -615,7 +617,7 @@ function connect() {
         if (!filterMsg(msg)) {
             var $room = chatbox.room(msg.room);
             msg = chatbox.highlightRoom(msg);
-            var scrollDown = scrollIsAtBottom($room);
+            var scrollDown = isScrollAtBottom($room);
             $room.append(msgFormat(msg));
             if (scrollDown) {
                 $room.scrollTop(9999999);
