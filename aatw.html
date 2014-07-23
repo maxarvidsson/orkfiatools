@@ -524,6 +524,9 @@ var chatbox = new (function() {
     var current = "";
     var $chat_tabs_ul = $("#chat").find("ul");
     this.addRoom = function(id) {
+        if (typeof rooms[id] !== "undefined") {
+            return false;
+        }
         self._addTab(id);
         self._addContent(id);
         if (current == "") {
@@ -533,6 +536,7 @@ var chatbox = new (function() {
         } else {
             rooms[id].css("visibility", "hidden");
         }
+        return true;
     };
     this.selectRoom = function(id) {
         if (current != id) {
@@ -674,8 +678,7 @@ function connect() {
 
     socket.on("rooms", function(rooms) {
         for (i in rooms) {
-            if ($("#" + rooms[i]).length == 0) {
-                chatbox.addRoom(rooms[i]);
+            if (chatbox.addRoom(rooms[i])) {
                 socket.emit("backlog", rooms[i]);
             } 
         }
