@@ -448,11 +448,12 @@ var timestamps = settings.get("timestamps");
 // notifications is not only on/off.. may also be completely disabled
 var notifications = settings.isEnabled("notifications") && settings.get("notifications");
 
-debug("Browser supports notifications: " + notify.isSupported());
+debug("Notifications supported by browser: " + notify.isSupported());
 if (notify.isSupported()) {
-    debug("Notifications has permission:   " + notify.hasPermission());
+    debug("Notifications has permission: " + notify.hasPermission());
     debug("Notifications permission level: " + notify.getPermissionLevel());
 }
+debug("Notifications is on: " + notifications);
 
 // Page title notifications ----------------------------------------------------
 var page_title;
