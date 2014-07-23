@@ -71,6 +71,9 @@ body {
     color: Maroon;
     font-weight: bold;
 }
+.hl_nick {
+    background-color: Maroon;
+}
 .timestamp {
     color: Gray;
 }
@@ -582,21 +585,29 @@ var chatbox = new (function() {
         if (msg.sender == myNick) {
             return msg;
         }
-        var i = msg.message.search(new RegExp(myNick, "i"));
-        if (i >= 0) {
+        var pattern = new RegExp("\\b" + myNick + "(\\b|:)", "ig");
+        var match = msg.message.match(pattern);
+        if (match) {
+            msg.hlNick = true;
             if (notifications) {
                 notify.message(msg);
             }
-            msg.message = msg.message.substr(0, i)
-                        + '<span class="my_nick">'
-                        + msg.message.substr(i, myNick.length)
-                        + "</span>"
-                        + msg.message.substr(i + myNick.length);
         }
+        // var i = msg.message.search(pattern);
+        // if (i >= 0) {
+        //     if (notifications) {
+        //         notify.message(msg);
+        //     }
+        //     msg.message = msg.message.substr(0, i)
+        //                 + '<span class="my_nick">'
+        //                 + msg.message.substr(i, myNick.length)
+        //                 + "</span>"
+        //                 + msg.message.substr(i + myNick.length);
+        // }
         if (current == msg.room) {
             return msg;
         }
-        if (i >= 0) {
+        if (match) {
             tabs[msg.room].removeClass("tab_new");
             tabs[msg.room].addClass("tab_alert");
         } else if (!tabs[msg.room].hasClass("tab_alert")) {
@@ -620,7 +631,11 @@ function msgFormat(msg) {
     var sender = '<strong style="color:' + name2color(msg.sender) + ';">' + msg.sender + '</strong>';
     var time = "";
     if (timestamps) {
-        time = '<span class="timestamp">' + msg.serverTime + '</span> ';
+        var style = "timestamp";
+        if (typeof msg.hlNick !== "undefined") {
+            style += " hl_nick";
+        }
+        time = '<span class="' + style + '">' + msg.serverTime + '</span> ';
     }
     return time + '&lt;' + sender + '&gt; ' + msg.message + '<br />';
 }
