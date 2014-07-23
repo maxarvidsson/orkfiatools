@@ -329,6 +329,7 @@ settings.add("token", {
 
 settings.add("timestamps", {default: true});
 
+var isConnected = false;
 var textarea = document.getElementById("chat_input");
 var button_connect = document.getElementById("button_connect");
 // Fix for bad behavour in firefox, it remembers disabled
@@ -341,7 +342,40 @@ button_connect.onclick = function () {
     connect();
     return false;
 };
+iframe.id = "aatw";
+iframe.src = server;
+document.getElementById("iframe_wrapper").appendChild(iframe);
 
+var loadingAnim = document.createElement("img");
+loadingAnim.alt = "connecting";
+loadingAnim.style.display = "none";
+// thanks to ajaxload.info for gif loading animation
+loadingAnim.src = "\
+data:image/gif;base64,R0lGODlhEAAQAPQAAP///wAAAPj4+Dg4OISEhAYGBiYmJtbW1qioqBYWF\
+nZ2dmZmZuTk5JiYmMbGxkhISFZWVgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\
+AAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQ\
+JCgAAACwAAAAAEAAQAAAFUCAgjmRpnqUwFGwhKoRgqq2YFMaRGjWA8AbZiIBbjQQ8AmmFUJEQhQGJha\
+KOrCksgEla+KIkYvC6SJKQOISoNSYdeIk1ayA8ExTyeR3F749CACH5BAkKAAAALAAAAAAQABAAAAVoI\
+CCKR9KMaCoaxeCoqEAkRX3AwMHWxQIIjJSAZWgUEgzBwCBAEQpMwIDwY1FHgwJCtOW2UDWYIDyqNVVk\
+UbYr6CK+o2eUMKgWrqKhj0FrEM8jQQALPFA3MAc8CQSAMA5ZBjgqDQmHIyEAIfkECQoAAAAsAAAAABA\
+AEAAABWAgII4j85Ao2hRIKgrEUBQJLaSHMe8zgQo6Q8sxS7RIhILhBkgumCTZsXkACBC+0cwF2GoLLo\
+FXREDcDlkAojBICRaFLDCOQtQKjmsQSubtDFU/NXcDBHwkaw1cKQ8MiyEAIfkECQoAAAAsAAAAABAAE\
+AAABVIgII5kaZ6AIJQCMRTFQKiDQx4GrBfGa4uCnAEhQuRgPwCBtwK+kCNFgjh6QlFYgGO7baJ2CxIi\
+oSDpwqNggWCGDVVGphly3BkOpXDrKfNm/4AhACH5BAkKAAAALAAAAAAQABAAAAVgICCOZGmeqEAMRTE\
+QwskYbV0Yx7kYSIzQhtgoBxCKBDQCIOcoLBimRiFhSABYU5gIgW01pLUBYkRItAYAqrlhYiwKjiWAcD\
+MWY8QjsCf4DewiBzQ2N1AmKlgvgCiMjSQhACH5BAkKAAAALAAAAAAQABAAAAVfICCOZGmeqEgUxUAIp\
+kA0AMKyxkEiSZEIsJqhYAg+boUFSTAkiBiNHks3sg1ILAfBiS10gyqCg0UaFBCkwy3RYKiIYMAC+RAx\
+iQgYsJdAjw5DN2gILzEEZgVcKYuMJiEAOwAAAAAAAAAAAA==";
+loadingAnim.style.display = "none";
+button_connect.parentNode.insertBefore(loadingAnim, button_connect.nextSibling);
+var connectedImg = document.createElement("img");
+connectedImg.alt = "connected";
+connectedImg.src = "\
+data:image/gif;base64,R0lGODlhEAAQAIABAACAAP///yH5BAEKAAEALAAAAAAQABAAAAIjjI8Jy\
+Qfb1IvoWRqsjrqzvmyOl4ngCIpGqqJnk2KkPGEOVgAAOw==";
+button_connect.parentNode.insertBefore(loadingAnim, button_connect.nextSibling);
+connectedImg.style.display = "none";
+button_connect.parentNode.insertBefore(connectedImg, button_connect.nextSibling);
 
 // Notifications --------------------------------------------------------------
 var notify = new (function() {
@@ -596,10 +630,42 @@ function isScrollAtBottom($el) {
     return ($el.scrollTop() + $el.height() >= el.scrollHeight);
 }
 function connect() {
+    loadingAnim.style.display = "inline";
+
     var socket = io.connect(server + ":" + port);
+
+    socket.on("error", function(obj) {
+        debug("io error: " + obj.message);
+    });
+
+    socket.on("disconnect", function() {
+        debug("io disconnected");
+        connectedImg.style.display = "none";
+        loadingAnim.style.display = "inline";
+        isConnected = false;
+    });
+
+    socket.on("reconnect", function(n) {
+        debug("io reconnected after " + n + " attempts");
+    });
+
+    socket.on("reconnect_attempt", function() {
+        debug("io attempting to reconnect");
+    });
+
+    socket.on("reconnecting", function(n) {
+        debug("io reconnecting, attempt number " + n);
+    });
+
+    socket.on("reconnect_error", function(obj) {
+        debug("io reconnect error: " + obj.message);
+    });
 
     socket.on("connect", function() {
         socket.emit("join", myNick, chatToken);
+        loadingAnim.style.display = "none";
+        connectedImg.style.display = "inline";
+        isConnected = true;
     });
 
     socket.on("rooms", function(rooms) {
