@@ -144,11 +144,13 @@ function debug(msg) {
 <div id="chat">
   <ul id="channels"></ul>
   <div id="Settings" class="room">
+      <form id="form_settings">
       <label><span>Username:</span><input type="text" id="settings_username" maxlength="20"></label>
       <label><span>Token:</span><input type="text" id="settings_token"></label>
       <label><span>Timestamps:</span><input type="checkbox" id="settings_timestamps"></label>
       <label><span>Notifications:</span><input type="checkbox" id="settings_notifications"></label>
       <button id="button_connect">Connect to chat</button>
+      </form>
       <dl>
         <dt>What is "token"?</dt>
         <dd>Its a unique string given to you by the game. It is used to
@@ -239,6 +241,9 @@ var settings = new (function(database) {
         var el = document.getElementById("settings_" + id);
         settings[id] = {element: el, options: opts};
         if (self.isEnabled(id)) {
+            // Fix for bad behavour in firefox, it remembers disabled
+            // attribute on page reload
+            el.disabled = false;
             self.init(id);
         } else {
             debug("this setting is disabled");
@@ -326,11 +331,15 @@ settings.add("timestamps", {default: true});
 
 var textarea = document.getElementById("chat_input");
 var button_connect = document.getElementById("button_connect");
+// Fix for bad behavour in firefox, it remembers disabled
+// attribute on page reload
+button_connect.disabled = false;
 button_connect.onclick = function () {
     button_connect.onclick = null;
     button_connect.disabled = true;
     settings.lock();
     connect();
+    return false;
 };
 
 
