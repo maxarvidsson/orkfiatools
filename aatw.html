@@ -144,10 +144,10 @@ function debug(msg) {
 <div id="chat">
   <ul id="channels"></ul>
   <div id="Settings" class="room">
-      <label><span>Username:</span><input type="text" id="username_input" maxlength="20"></label>
-      <label><span>Token:</span><input type="text" id="token_input"></label>
-      <label><span>Timestamps:</span><input type="checkbox" id="timestamp_input"></label>
-      <label><span>Notifications:</span><input type="checkbox" id="notifications_input"></label>
+      <label><span>Username:</span><input type="text" id="settings_username" maxlength="20"></label>
+      <label><span>Token:</span><input type="text" id="settings_token"></label>
+      <label><span>Timestamps:</span><input type="checkbox" id="settings_timestamps"></label>
+      <label><span>Notifications:</span><input type="checkbox" id="settings_notifications"></label>
       <button id="button_connect">Connect to chat</button>
       <dl>
         <dt>What is "token"?</dt>
@@ -190,109 +190,149 @@ $("#Settings").find('dt').each(function() {
     });
 });
 
-var db = new (function() {
+// support "built-in" string, number, boolean
+var db = (function() {
+    if (typeof localStorage === "undefined") {
+        return new (function() {
+            var temp = {};
+            this.get = function(key) {
+                return temp[key];
+            };
+            this.set = function(key, value) {
+                temp[key] = value;
+            }
+        });
+    }
+    return new (function() {
+        this.get = function(key) {
+            var value = localStorage.getItem(key);
+            var type = localStorage.getItem(key + "_meta_type");
+            if (type === typeof true) {
+                value = !!(+value);
+            } else if (type === typeof 1) {
+                value = +value;
+            }
+            debug("db.get(" + key + ") value: " + value + ", type: " + typeof value);
+            return value;
+        };
+        this.set = function(key, value) {
+            debug("db.set(" + key + ", " + value + ") type: " + typeof value);
+            var type = typeof value;
+            if (type !== typeof "") {
+                localStorage.setItem(key + "_meta_type", type);
+                if (type === typeof true) {
+                    value = value ? "1" : "0";
+                }
+            }
+            localStorage.setItem(key, value);
+        };
+    });
+})();
+
+var settings = new (function(database) {
     var self = this;
-    var temp = {};
-    this.get = function(key) {
-        if (typeof localStorage !== "undefined") {
-            return localStorage.getItem(key);
+    var db = database;
+    var settings = {};
+    this.add = function(id, opts) {
+        debug("settings.add(" + id + ")");
+        var opts = opts || {};
+        var el = document.getElementById("settings_" + id);
+        settings[id] = {element: el, options: opts};
+        if (self.isEnabled(id)) {
+            self.init(id);
         } else {
-            return temp[key];
+            debug("this setting is disabled");
+            el.disabled = true;
         }
     };
-    this.set = function(key, value) {
-        if (typeof localStorage !== "undefined") {
-            localStorage.setItem(key, value);
-        } else {
-            temp[key] = value;
+    this.isEnabled = function(id) {
+        var enabled = true;
+        var opt = settings[id].options.enabled;
+        if (typeof opt === typeof true) {
+            enabled = opt;
         }
+        return enabled;
+    };
+    this.defaultValue = function(id) {
+        if (typeof settings[id].options.default !== "undefined") {
+            return settings[id].options.default;
+        }
+        return "";
+    };
+    this.init = function(id) {
+        debug("settings.init(" + id + ")");
+        settings[id].element.onchange = function() {
+            self.set(id, self.getElementValue(this));
+        }
+        var value = db.get(id);
+        if (value === null) {
+            value = self.defaultValue(id);
+        }
+        self.set(id, value);
+    };
+    this.filter = function(id, value) {
+        var filter = settings[id].options.filter;
+        if (typeof filter === "function") {
+            value = filter(value);
+        }
+        return value;
+    };
+    this.set = function(id, value) {
+        debug("settings.set(" + id + ", " + value + ")");
+        value = self.filter(id, value);
+        self.setElementValue(settings[id].element, value);
+        db.set(id, value);
+    };
+    this.get = function(id) {
+        return db.get(id);
+    };
+    this.getElementValue = function(el) {
+        if (el.type == "checkbox") {
+            return el.checked;
+        }
+        return el.value;
+    };
+    this.setElementValue = function(el, value) {
+        if (el.type == "checkbox") {
+            el.checked = value;
+        } else {
+            el.value = value;
+        }
+    };
+    this.lock = function() {
+        for (var i in settings) {
+            settings[i].element.disabled = true;
+        }
+    };
+})(db);
+
+settings.add("username", {
+    filter: function(v) {
+        v = v.trim().replace(" ", "_");
+        if (v.length == 0) {
+            v = "guest" + Math.floor(Math.random() * 10000);
+        }
+        return v;
     }
 });
 
-var username_input = document.getElementById("username_input");
-var token_input = document.getElementById("token_input");
-var timestamp_input = document.getElementById("timestamp_input");
-var notifications_input = document.getElementById("notifications_input");
+settings.add("token", {
+    filter: function(v) {
+        return v.replace(/[^\w\n]/g, "");
+    }
+});
+
+settings.add("timestamps", {default: true});
+
 var textarea = document.getElementById("chat_input");
 var button_connect = document.getElementById("button_connect");
 button_connect.onclick = function () {
     button_connect.onclick = null;
-    button_connect.disabled = "disabled";
-    username_input.disabled = "disabled";
-    token_input.disabled = "disabled";
-    timestamp_input.disabled = "disabled";
-    notifications_input.disabled = "disabled";
+    button_connect.disabled = true;
+    settings.lock();
     connect();
 };
 
-var myNick, chatToken, timestamps, notifications;
-function setNick(nick) {
-    debug("setNick(" + nick + "), typeof nick: " + typeof nick);
-    nick = nick.trim().replace(" ", "_");
-    if (nick.length == 0) {
-        nick = "guest" + Math.floor(Math.random() * 10000);
-    }
-    myNick = nick;
-    db.set("username", nick);
-    username_input.value = nick;
-}
-function setToken(token) {
-    debug("setToken(" + token + "), typeof token: " + typeof token);
-    chatToken = token;
-    db.set("token", token);
-    token_input.value = token;
-}
-function setTimestamps(ts) {
-    debug("setTimestamps(" + ts + "), typeof ts: " + typeof ts);
-    timestamps = ts;
-    db.set("timestamps", (ts ? "1" : ""));
-    timestamp_input.checked = ts;
-}
-
-// init nick
-(function() {
-    var nick = db.get("username");
-    if (typeof nick !== "string") {
-        nick = "";
-    }
-    setNick(nick);
-})();
-
-// init token
-(function() {
-    var token = db.get("token");
-    if (typeof token !== "string") {
-        token = "";
-    }
-    setToken(token);
-})();
-
-// init timestamp
-(function() {
-    var ts = db.get("timestamps");
-    if (typeof ts !== "string") {
-        ts = false;
-    } else if (ts.length > 0) {
-        ts = true;
-    } else {
-        ts = false;
-    }
-    setTimestamps(ts);
-})();
-
-username_input.onchange = function() {
-    setNick(username_input.value);
-};
-
-token_input.onchange = function() {
-    // be nice to people
-    var temp = token_input.value.replace(/[^\w\n]/g, "");
-    setToken(temp);
-};
-
-timestamp_input.onchange = function() {
-    setTimestamps(timestamp_input.checked);
-};
 
 // Notifications --------------------------------------------------------------
 var notify = new (function() {
@@ -306,7 +346,7 @@ var notify = new (function() {
         }
     };
     this.isSupported = function() {
-        return "Notification" in window;
+        return false && "Notification" in window;
     };
     this.getPermissionLevel = function() {
         return Notification.permission;
@@ -332,53 +372,35 @@ var notify = new (function() {
         });
     };
 });
-function setNotifications(v) {
-    debug("setNotifications(" + v + "), typeof param: " + typeof v);
-    notifications = v;
-    db.set("notifications", (v ? "1" : ""));
-    notifications_input.checked = v;
-}
-// init notification
-(function() {
-    var v;
-    if (!notify.isSupported()) {
-        notifications_input.disabled = "disabled";
-        v = false;
-    } else if (!notify.hasPermission()) {
-        v = false;
-    } else {
-        v = db.get("notifications");
-        if (typeof v !== "string") {
-            v = false;
-        } else if (v.length > 0) {
-            v = true;
-        } else {
-            v = false;
+
+settings.add("notifications", {
+    default: false,
+    enabled: notify.isSupported(),
+    filter: function(v) {
+        if (!v || !notify.isSupported()) {
+            return false;
         }
+        if (notify.isDenied()) {
+            settings.set("notifications", false);
+            // need some nicer popup that doesnt halt execution
+            // alert("Your browser-settings does not allow notifications on this site");
+        } else if (!notify.hasPermission()) {
+            notify.requestPermission(function() {
+                // runs very much async from rest
+                settings.set("notifications", notify.hasPermission());
+            });
+        } else {
+            return true;
+        }
+        return false;
     }
-    setNotifications(v);
-    if (notify.isSupported()) {
-        notifications_input.onchange = function() {
-            var checked = notifications_input.checked;
-            if (checked) {
-                if (notify.isDenied()) {
-                    setNotifications(false);
-                    alert("Your browser-settings does not allow notifications on this site");
-                } else if (!notify.hasPermission()) {
-                    setNotifications(false);
-                    notify.requestPermission(function() {
-                        // runs very much async from rest
-                        setNotifications(notify.hasPermission());
-                    });
-                } else {
-                    setNotifications(true);
-                }
-            } else {
-                setNotifications(false);
-            }
-        };
-    }
-})();
+});
+
+var myNick = settings.get("username");
+var chatToken = settings.get("token");
+var timestamps = settings.get("timestamps");
+// notifications is not only on/off.. may also be completely disabled
+var notifications = settings.isEnabled("notifications") && settings.get("notifications");
 
 debug("Browser supports notifications: " + notify.isSupported());
 if (notify.isSupported()) {
@@ -558,6 +580,10 @@ function msgFormat(msg) {
 function filterMsg(msg) {
     return (msg.room == "Global" && msg.sender == "IRC Stats");
 }
+function scrollIsAtBottom($div) {
+    debug("scrollIsAtBottom: " + $div.scrollTop() + " + " + $div.height() + " >= " + $div[0].scrollHeight);
+    return ($div.scrollTop() + $div.height() >= $div[0].scrollHeight);
+}
 function connect() {
     var socket = io.connect(server + ":" + port);
 
@@ -565,7 +591,7 @@ function connect() {
         socket.emit("join", myNick, chatToken);
     });
 
-    socket.on("rooms", function(rooms){
+    socket.on("rooms", function(rooms) {
         for (i in rooms) {
             if ($("#" + rooms[i]).length == 0) {
                 chatbox.addRoom(rooms[i]);
@@ -578,21 +604,21 @@ function connect() {
         for (i in msgs) {
             msg = msgs[i];
             if (!filterMsg(msg)) {
-                chat_div = chatbox.room(msg.room);
-                chat_div.append(msgFormat(msg));
-                chat_div.scrollTop(9999999);
+                var $room = chatbox.room(msg.room);
+                $room.append(msgFormat(msg));
+                $room.scrollTop(9999999);
             }
         }
     });
 
     socket.on("chat", function(msg) {
         if (!filterMsg(msg)) {
-            chat_div = chatbox.room(msg.room);
+            var $room = chatbox.room(msg.room);
             msg = chatbox.highlightRoom(msg);
-            chat_div.append(msgFormat(msg));
-            debug(chat_div.scrollTop() + ", " + chat_div.height() + ", " + chat_div[0].scrollHeight);
-            if (chat_div.scrollTop() + chat_div.height() >= chat_div[0].scrollHeight) {
-                chat_div.scrollTop(9999999);
+            var scrollDown = scrollIsAtBottom($room);
+            $room.append(msgFormat(msg));
+            if (scrollDown) {
+                $room.scrollTop(9999999);
             }
         }
     });
@@ -609,6 +635,7 @@ function connect() {
     // when the client hits ENTER on their keyboard
     textarea.onkeypress = function(event) {
         var e = event || window.event;
+        // jquery might help us make "which" work in all browsers
         if (e.which == 13) {
             if (chatbox.currentRoom() !== "Settings") {
                 sendMsg(textarea);
