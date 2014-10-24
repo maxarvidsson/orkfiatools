@@ -136,7 +136,7 @@ body {
 }
 </style>
 <script type="text/javascript">
-var server = "http://lallafa.aatw.local";
+var server = "http://alliancesatwar.com";
 var port = "1337";
 function debug(msg) {
     console.log(msg);
@@ -443,17 +443,13 @@ settings.add("notifications", {
 });
 
 var myNick = settings.get("username");
-var chatToken = settings.get("token");
-var timestamps = settings.get("timestamps");
-// notifications is not only on/off.. may also be completely disabled
-var notifications = settings.isEnabled("notifications") && settings.get("notifications");
 
 debug("Notifications supported by browser: " + notify.isSupported());
 if (notify.isSupported()) {
     debug("Notifications has permission: " + notify.hasPermission());
     debug("Notifications permission level: " + notify.getPermissionLevel());
 }
-debug("Notifications is on: " + notifications);
+//debug("Notifications is on: " + notifications);
 
 // Page title notifications ----------------------------------------------------
 var page_title;
@@ -583,6 +579,7 @@ var chatbox = new (function() {
     this.highlightRoom = function(msg) {
         debug("HL: " + msg.room + " (current: " + current + ")");
         page_title.update();
+        var myNick = settings.get("username");
         if (msg.sender == myNick) {
             return msg;
         }
@@ -590,7 +587,9 @@ var chatbox = new (function() {
         var match = msg.message.match(pattern);
         if (match) {
             msg.hlNick = true;
-            if (notifications) {
+            if (settings.isEnabled("notifications")
+                && settings.get("notifications")
+            ) {
                 notify.message(msg);
             }
         }
@@ -631,7 +630,7 @@ function msgFormat(msg) {
     }
     var sender = '<strong style="color:' + name2color(msg.sender) + ';">' + msg.sender + '</strong>';
     var time = "";
-    if (timestamps) {
+    if (settings.get("timestamps")) {
         var style = "timestamp";
         if (typeof msg.hlNick !== "undefined") {
             style += " hl_nick";
@@ -686,7 +685,7 @@ function connect() {
     });
 
     socket.on("connect", function() {
-        socket.emit("join", myNick, chatToken);
+        socket.emit("join", settings.get("username"), settings.get("token"));
         loadingAnim.style.display = "none";
         connectedImg.style.display = "inline";
         isConnected = true;
