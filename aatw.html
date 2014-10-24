@@ -148,7 +148,7 @@ function debug(msg) {
   <ul id="channels"></ul>
   <div id="Settings" class="room">
       <form id="form_settings">
-      <label><span>Username:</span><input type="text" id="settings_username" maxlength="20"></label>
+      <label><span>Nickname:</span><input type="text" id="settings_username" maxlength="20"></label>
       <label><span>Token:</span><input type="text" id="settings_token"></label>
       <label><span>Timestamps:</span><input type="checkbox" id="settings_timestamps"></label>
       <label><span>Notifications:</span><input type="checkbox" id="settings_notifications"></label>
@@ -540,14 +540,14 @@ var chatbox = new (function() {
     };
     this.selectRoom = function(id) {
         if (current != id) {
+            if (current != "") {
+                tabs[current].removeClass("tab_active");
+                rooms[current].css("visibility", "hidden");
+            }
             tabs[id].addClass("tab_active");
             rooms[id].css("visibility", "visible");
+            current = id;
         }
-        if (current != "") {
-            tabs[current].removeClass("tab_active");
-            rooms[current].css("visibility", "hidden");
-        }
-        current = id;
     };
     this._addTab = function(id) {
         var title = id.replace("_", " ");
