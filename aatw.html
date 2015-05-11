@@ -473,7 +473,7 @@ if (typeof document.hasFocus !== "function") {
             debug("update page title? document has focus: " + has_focus);
             if (!has_focus) {
                 count = count + 1;
-                document.title = orig + " " + count;
+                document.title = count + " " + orig;
             }
         };
     });
