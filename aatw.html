@@ -753,6 +753,7 @@ function connect() {
         }
     });
 
+
     function sendMsg(textarea) {
         var message = textarea.value;
         textarea.value = "";
@@ -765,13 +766,35 @@ function connect() {
         scrollToBottom($room[0]);
     }
 
+    var history = [""];
+    var pos = 0;
+
     // when the client hits ENTER on their keyboard
-    textarea.onkeypress = function(event) {
+    textarea.onkeydown = function(event) {
         var e = event || window.event;
         // jquery might help us make "which" work in all browsers
-        if (e.which == 13) {
+        debug("textarea.keypress: " + e.which);
+        switch (e.which) {
+        case 13:
             if (chatbox.currentRoom() !== "Settings") {
+                history[history.length - 1] = textarea.value;
+                pos = history.push("") - 1;
                 sendMsg(textarea);
+            }
+            return false;
+        case 38:
+            debug("history up!");
+            if (pos == history.length - 1) {
+                history[pos] = textarea.value;
+            }
+            if (pos > 0) {
+                textarea.value = history[--pos];
+            }
+            return false;
+        case 40:
+            debug("history down!");
+            if (pos != history.length - 1) {
+                textarea.value = history[++pos];
             }
             return false;
         }
