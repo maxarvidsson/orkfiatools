@@ -134,6 +134,9 @@ body {
     font-style: italic;
     font-weight: bold;
 }
+.msg-nick {
+    font-weight: bold;
+}
 </style>
 <script type="text/javascript">
 var server = "http://alliancesatwar.com";
@@ -656,7 +659,7 @@ function msgFormat(msg) {
     if (msg.sender.substr(0, 4) == 'IRC ') {
         msg.sender = msg.sender.substr(4);
     }
-    var sender = '<strong style="color:' + name2color(msg.sender) + ';">' + msg.sender + '</strong>';
+    var sender = '<strong class="msg-nick" style="color:' + name2color(msg.sender) + ';">' + msg.sender + '</strong>';
     var time = "";
     if (settings.get("timestamps")) {
         var style = "timestamp";
