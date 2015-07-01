@@ -139,7 +139,7 @@ body {
 var server = "http://alliancesatwar.com";
 var port = "1337";
 function debug(msg) {
-    console.log(msg);
+    //console.log(msg);
 }
 </script>
 </head>
@@ -578,6 +578,10 @@ var chatbox = new (function() {
     };
     this.highlightRoom = function(msg) {
         debug("HL: " + msg.room + " (current: " + current + ")");
+        // Ignore notifications from "Botter" - trivia bot super spamming 
+        if (msg.sender == "IRC Botter") { 
+            return msg;
+        }
         page_title.update();
         var myNick = settings.get("username");
         if (msg.sender == myNick) {
