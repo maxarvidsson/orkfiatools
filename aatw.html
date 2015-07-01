@@ -152,6 +152,7 @@ function debug(msg) {
       <label><span>Token:</span><input type="text" id="settings_token"></label>
       <label><span>Timestamps:</span><input type="checkbox" id="settings_timestamps"></label>
       <label><span>Notifications:</span><input type="checkbox" id="settings_notifications"></label>
+      <label><span>Font Size:</span><input size="3" type="text" id="settings_font_size"></label>
       <button id="button_connect">Connect to chat</button>
       </form>
       <dl>
@@ -290,6 +291,10 @@ var settings = new (function(database) {
         value = self.filter(id, value);
         self.setElementValue(settings[id].element, value);
         db.set(id, value);
+        var onChange = settings[id].options.onChange;
+        if (typeof onChange === "function") {
+            onChange(value);
+        }
     };
     this.get = function(id) {
         return db.get(id);
@@ -309,7 +314,11 @@ var settings = new (function(database) {
     };
     this.lock = function() {
         for (var i in settings) {
-            settings[i].element.disabled = true;
+            var lock = true;
+            if (typeof settings[i].options.alwaysUnlocked === "boolean") {
+                lock = !settings[i].options.alwaysUnlocked;
+            }
+            settings[i].element.disabled = lock;
         }
     };
 })(db);
@@ -327,6 +336,21 @@ settings.add("username", {
 settings.add("token", {
     filter: function(v) {
         return v.replace(/[^\w\n]/g, "");
+    }
+});
+
+settings.add("font_size", {
+    default: "11",
+    alwaysUnlocked: true,
+    filter: function(v) {
+        v = v.replace(/[\D]/g, "");
+        if (v.length == 0) {
+            v = "11";
+        }
+        return v;
+    },
+    onChange: function(v) {
+        document.body.style.fontSize = v + "px";
     }
 });
 
