@@ -655,6 +655,13 @@ chatbox._addTab("Settings");
 chatbox._addRoom("Settings", $("#Settings"));
 chatbox.selectRoom("Settings");
 
+var urlPattern = /(http|ftp|https):\/\/[\w-]+(\.[\w-]+)+([\w.,@?^=%&amp;:\/~+#-]*[\w@?^=%&amp;\/~+#-])?/g;
+function urlFilter(s) {
+    return s.replace(urlPattern, '<a href="$&" target="_blank">$&</a>');
+}
+function decode(s) {
+    return s.replace(/&#x2f;/g, '/');
+}
 function msgFormat(msg) {
     if (msg.sender.substr(0, 4) == 'IRC ') {
         msg.sender = msg.sender.substr(4);
@@ -668,7 +675,9 @@ function msgFormat(msg) {
         }
         time = '<span class="' + style + '">' + msg.serverTime + '</span> ';
     }
-    return time + '&lt;' + sender + '&gt; ' + msg.message + '<br />';
+    msg.message = decode(msg.message);
+    var message = urlFilter(msg.message);
+    return time + '&lt;' + sender + '&gt; ' + message + '<br />';
 }
 function filterMsg(msg) {
     return (msg.room == "Global" && msg.sender == "IRC Stats");
