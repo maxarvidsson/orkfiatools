@@ -680,7 +680,7 @@ function msgFormat(msg) {
     return time + '&lt;' + sender + '&gt; ' + message + '<br />';
 }
 function filterMsg(msg) {
-    return (msg.room == "Global" && msg.sender == "IRC Stats");
+    return (msg.sender == "IRC Stats");
 }
 function isScrollAtBottom(el) {
     // works better without jquery
