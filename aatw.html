@@ -357,7 +357,34 @@ settings.add("font_size", {
     }
 });
 
-settings.add("timestamps", {default: true});
+settings.add("timestamps", {
+    default: true,
+    alwaysUnlocked: true,
+    onChange: (function() {
+        var rule = (function(){
+            var sheets = document.styleSheets;
+            for (var i = 0; i < sheets.length; i++) {
+                var sheet = sheets[i];
+                if (sheet.cssRules) {
+                    var rules = sheet.cssRules;
+                    for (var j = 0; j < rules.length; j++) {
+                        var rule = rules[j];
+                        if (rule.selectorText == ".timestamp") {
+                            return rule;
+                        }
+                    }
+                }
+            }
+        })();
+        return function(v) {
+            if (v) {
+                rule.style.display = "";
+            } else {
+                rule.style.display = "none";
+            }
+        };
+    })()
+});
 
 var isConnected = false;
 var textarea = document.getElementById("chat_input");
@@ -668,13 +695,11 @@ function msgFormat(msg) {
     }
     var sender = '<strong class="msg-nick" style="color:' + name2color(msg.sender) + ';">' + msg.sender + '</strong>';
     var time = "";
-    if (settings.get("timestamps")) {
-        var style = "timestamp";
-        if (typeof msg.hlNick !== "undefined") {
-            style += " hl_nick";
-        }
-        time = '<span class="' + style + '">' + msg.serverTime + '</span> ';
+    var style = "timestamp";
+    if (typeof msg.hlNick !== "undefined") {
+        style += " hl_nick";
     }
+    time = '<span class="' + style + '">' + msg.serverTime + '</span> ';
     msg.message = decode(msg.message);
     var message = urlFilter(msg.message);
     return time + '&lt;' + sender + '&gt; ' + message + '<br />';
