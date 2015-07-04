@@ -633,7 +633,8 @@ var chatbox = new (function() {
     this.highlightRoom = function(msg) {
         debug("HL: " + msg.room + " (current: " + current + ")");
         // Ignore notifications from "Botter" - trivia bot super spamming 
-        if (msg.sender == "IRC Botter") { 
+        var botter = "IRC Botter";
+        if (msg.sender.substr(0, botter.length) == botter) { 
             return msg;
         }
         page_title.update();
