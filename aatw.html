@@ -542,6 +542,55 @@ if (typeof document.hasFocus !== "function") {
 }
 
 var color_table = {};
+// all colors below pass WCAG AA (good contrast)
+var color_list = [
+    // pink color
+    "#c71585", // MediumVioletRed
+    // red colors
+    "#dc143c", // Crimson
+    "#b22222", // FireBrick
+    "#8b0000", // DarkRed
+    // brown colors
+    "#8b4513", // SaddleBrown
+    "#a0522d", // Sienna
+    "#a52a2a", // Brown
+    "#800000", // Maroon
+    // green colors
+    "#556b2f", // DarkOliveGreen
+    "#008000", // Green
+    "#006400", // DarkGreen
+    // cyan color
+    "#008080", // Teal
+    // blue colors
+    "#4169e1", // RoyalBlue
+    "#0000ff", // Blue
+    "#0000cd", // MediumBlue
+    "#00008b", // DarkBlue
+    "#000080", // Navy
+    "#191970", // MidnightBlue
+    // purple/violet/magenta colors
+    "#8a2be2", // BlueViolet
+    "#9400d3", // DarkViolet
+    "#9932cc", // DarkOrchid
+    "#8b008b", // DarkMagenta
+    "#800080", // Purple
+    "#4b0082", // Indigo
+    "#483d8b", // DarkSlateBlue
+    "#663399", // RebeccaPurple
+    "#6a5acd", // SlateBlue
+    // gray color
+    "#2f4f4f" // DarkSlateGray
+];
+function hash(s, n) {
+    var hash = 0;
+    var factor = 1;
+    for (var i = s.length - 1; i >= 0; --i) {
+        hash += factor * s.charCodeAt(i);
+        factor = (factor * 19) % n;
+    }
+    hash = hash % n;
+    return hash;
+}
 function name2color(name) {
     debug("name2color(" + name + ")");
     name = name.toLowerCase();
@@ -550,25 +599,7 @@ function name2color(name) {
         name = name.substr(0, name.length - 1);
     }
     if (typeof color_table[name] === "undefined") {
-        var r = 0, g = 0, b = 0, chr;
-        for (var i = 0; i < name.length; ++i) {
-            chr = name.charCodeAt(i);
-            r += chr * 31;
-            g += chr * 17;
-            b += chr * 47;
-        }
-        r = r % 256;
-        g = g % 256;
-        b = b % 256;
-        if (r+g+b > 384) {
-            // dont create yellow by setting blue = 0 :E
-            if (r < g) {
-                r = 0;
-            } else {
-                g = 0;
-            }
-        }
-        color_table[name] = "rgb(" + r + ", " + g + ", " + b + ")";
+        color_table[name] = color_list[hash(name, color_list.length)];
         debug(name + " = " + color_table[name]);
     }
     return color_table[name];
