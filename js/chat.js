@@ -685,3 +685,28 @@ function connect() {
         }
     };
 };
+
+// Stuff to do if chat is not run "stand-alone"
+var standalone = (self == top);
+
+settings.add("chat_pos", {
+    enabled: !standalone,
+    default: "right",
+    alwaysUnlocked: true,
+    onChange: function(v) {
+        switch (v) {
+        case "right":
+            parent.showAatw();
+            parent.chatRight();
+            break;
+        case "left":
+            parent.showAatw();
+            parent.chatLeft();
+            break;
+        case "full":
+            parent.hideAatw();
+            break;
+        }
+    }
+});
+
