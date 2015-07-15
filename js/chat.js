@@ -323,18 +323,19 @@ if (typeof document.hasFocus !== "function") {
     });
 } else {
     page_title = new (function() {
-        var orig = document.title;
+        var doc = window.top.document;
+        var orig = doc.title;
         var count = 0;
         this.reset = function() {
             count = 0;
-            document.title = orig;
+            doc.title = orig;
         };
         this.update = function() {
-            var has_focus = document.hasFocus();
+            var has_focus = doc.hasFocus();
             debug("update page title? document has focus: " + has_focus);
             if (!has_focus) {
                 count = count + 1;
-                document.title = count + " " + orig;
+                doc.title = count + " " + orig;
             }
         };
     });
