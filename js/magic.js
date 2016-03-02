@@ -5,8 +5,8 @@ var main_form = document.getElementById('main_form');
 
 function main() {
 
-    var ml = Math.min(100, Math.max(1, document.getElementById('ml').value));
-    var target = Math.min(100, Math.max(1, document.getElementById('target').value));
+    var ml = Math.max(1, document.getElementById('ml').value);
+    var target = Math.max(1, document.getElementById('target').value);
     var spell = getSpell('spell');
     var race = getRace('race');
     var target_race = getTargetRace('target_race');
