@@ -29,6 +29,10 @@ function main() {
         f.style.display = "none";
     }
 
+    if (spell.type == "dark") {
+        spell.chance += race.chanceDark;
+    }
+
     var race_fail = target_race.protection;
     var race_cast_fail = race.fumble;
     var church_protection = 0.03;
@@ -71,7 +75,7 @@ function selop(e) {
 function getSpell(e) {
     op = selop(e);
     return {
-        chance: op.getAttribute('data-chance'),
+        chance: parseInt(op.getAttribute('data-chance'), 10),
         type: op.getAttribute('data-type')
     };
 }
@@ -79,7 +83,8 @@ function getSpell(e) {
 function getRace(e) {
     op = selop(e);
     return {
-        fumble: op.getAttribute('data-fumble') / 100
+        fumble: op.getAttribute('data-fumble') / 100,
+        chanceDark: op.hasAttribute('data-chance-dark') ? parseInt(op.getAttribute('data-chance-dark'), 10) : 0
     };
 }
 

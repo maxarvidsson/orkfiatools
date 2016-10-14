@@ -33,14 +33,11 @@ Chance: <span id="chance">??</span>
 <td colspan="2">
 <select id="spell" onchange="main();">
 <option data-chance="220" data-type="intel">Inner Sight</option>
-<option data-chance="200" data-type="dark">Cleanse</option>
 <option data-chance="200" data-type="intel">Vision</option>
 <option data-chance="180" data-type="dark">Poison</option>
 <option data-chance="150" data-type="dark">Enforced Honesty</option>
 <option data-chance="150" data-type="dark">Fear</option>
 <option data-chance="150" data-type="dark">Juranimosity</option>
-<option data-chance="120" data-type="dark">Lightning Bolt</option>
-<option data-chance="120" data-type="dark">Cyclops</option>
 <option data-chance="120" data-type="dark">Fireball</option>
 <option data-chance="120" data-type="dark">Mystical Rust</option>
 <option data-chance="120" data-type="dark">Wrath of XENE</option>
@@ -50,6 +47,7 @@ Chance: <span id="chance">??</span>
 <option data-chance="90" data-type="dark">Earthquake</option>
 <option data-chance="80" data-type="dark">Enchantress Salem</option>
 <option data-chance="80" data-type="dark">Winds of Distress</option>
+<option data-chance="70" data-type="dark">Lightning Bolt</option>
 <option data-chance="70" data-type="dark" selected="selected">DragonMage</option>
 <option data-chance="60" data-type="dark">Magical Void</option>
 </select>
@@ -60,6 +58,7 @@ Chance: <span id="chance">??</span>
 <td>Your Race:</td>
 <td><select id="race" onchange="main();">
 <option data-fumble="0" selected="selected">Other</option>
+<option data-fumble="0" data-chance-dark="20">Dark Elf</option>
 </select></td>
 </tr>
 
@@ -67,8 +66,6 @@ Chance: <span id="chance">??</span>
 <td>Target Race:</td>
 <td><select id="target_race" onchange="main();">
 <option data-protection="0" selected="selected">Other</option>
-<option data-protection="20">Mori Hai (20%)</option>
-<option data-protection="0" data-ability="fame1">High Elf</option>
 </select></td>
 </tr>
 
@@ -106,7 +103,7 @@ Chance: <span id="chance">??</span>
 </section>
 
 <footer>
-Updated for age 75. <a href="#" id="link_input">Link</a>
+Updated for age 82. <a href="#" id="link_input">Link</a>
 </footer>
 
 <script type="text/javascript" src="./js/Chart.min.js"></script>
