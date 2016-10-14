@@ -41,7 +41,7 @@ function main() {
     var church_fail = churches*church_protection;
     var base = orkfiaSpellChance(ml, target, spell.chance);
     var size_fail = 0;
-    var chance = base*(1-church_fail)*(1-sod*0.25)*(1-race_fail)*(1-race_cast_fail)*(1-sci_fail)*(1-fame_fail);
+    var chance = base*(1-church_fail)*(1-sod*0.15)*(1-race_fail)*(1-race_cast_fail)*(1-sci_fail)*(1-fame_fail);
 
     var canvas = document.getElementById("chart");
     var dataset = filterData(createData(casts, chance), 1);
