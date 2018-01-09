@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<head>
+<meta charset="utf-8">
+<style>
+
+body {
+    margin: 0px;
+    font: 10px sans-serif;
+}
+
+svg {
+    display: block;
+}
+
+fieldset {
+    margin: 10px;
+    display: inline-block;
+    vertical-align: top;
+    border: 0px;
+    padding: 0px 5px;
+}
+
+fieldset legend {
+    font-size: 12px;
+}
+
+fieldset select {
+    margin: 5px 0px;
+    border: 1px solid #A9A9A9;
+    display: block;
+}
+
+fieldset label {
+    display: block;
+    margin: 6px 0px;
+}
+
+#controllers {
+    height: 150px;
+    overflow: hidden;
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+.line {
+    fill: none;
+    stroke: steelblue;
+    stroke-width: 1.5px;
+}
+
+.name {
+    /* visibility: hidden; */
+    font-size: 12px;
+}
+
+.hover .line,
+.marked .line {
+    stroke-width: 5px;
+}
+
+.hover .name,
+.marked .name {
+    visibility: visible;
+}
+
+.horizontalGrid {
+    fill: none;
+    stroke: #A9A9A9;
+    shape-rendering: crispEdges;
+    stroke-width: 1px;
+    visibility: visible;
+}
+
+.verticalGrid {
+    fill: none;
+    stroke: #A9A9A9;
+    shape-rendering: crispEdges;
+    stroke-width: 1px;
+    visibility: visible;
+}
+
+</style>
+</head>
+<body>
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script>
+
+d3.selection.prototype.moveToFront = function() {  
+    return this.each(function(){
+        this.parentNode.appendChild(this);
+    });
+};
+
+if (typeof Object.assign != 'function') {
+    (function () {
+        Object.assign = function (target) {
+            'use strict';
+            if (target === undefined || target === null) {
+                throw new TypeError('Cannot convert undefined or null to object');
+            }
+            var output = Object(target);
+            for (var index = 1; index < arguments.length; index++) {
+                var source = arguments[index];
+                if (source !== undefined && source !== null) {
+                    for (var nextKey in source) {
+                        if (source.hasOwnProperty(nextKey)) {
+                            output[nextKey] = source[nextKey];
+                        }
+                    }
+                }
+            }
+            return output;
+        };
+    })();
+}
+
+Math.trunc = Math.trunc || function(x) {
+    return x < 0 ? Math.ceil(x) : Math.floor(x);
+}
+</script>
+<script src="js/filters.js"></script>
+<script>
+
+var dataFiles = [
+    {name: "Age 91", value: "history/age91.json"},
+    {name: "Age 90", value: "history/age90.json"},
+    {name: "Age 89", value: "history/age89.json"},
+    {name: "Age 88", value: "history/age88.json"},
+    {name: "Age 87", value: "history/age87.json"},
+    {name: "Age 86", value: "history/age86.json"},
+    {name: "Age 85", value: "history/age85.json"},
+    {name: "Age 84", value: "history/age84.json"},
+    {name: "Age 83", value: "history/age83.json"},
+    {name: "Age 82", value: "history/age82.json"},
+    {name: "Age 81", value: "history/age81.json"},
+    {name: "Age 80", value: "history/age80.json"},
+    {name: "Age 79", value: "history/age79.json"},
+    {name: "Age 78", value: "history/age78.json"},
+    {name: "Age 77", value: "history/age77.json"}
+];
+
+function ucfirst(s) {
+    return s[0].toUpperCase() + s.slice(1);
+}
+
+function getCssRule(name) {
+    var sheets = document.styleSheets;
+    for (var i = 0; i < sheets.length; i++) {
+        var sheet = sheets[i];
+        if (sheet.cssRules) {
+            var rules = sheet.cssRules;
+            for (var j = 0; j < rules.length; j++) {
+                var rule = rules[j];
+                if (rule.selectorText === name) {
+                    return rule;
+                }
+            }
+        }
+    }
+}
+
+var dateFormatter = (function() {
+    function pad(v) {
+        if (v < 0) {
+            return "-" + pad(Math.abs(v));
+        } else {
+            return v < 10 ? "0" + v : v;
+        }
+    }
+    function timezone(ts) {
+        var minutes = ts.getTimezoneOffset() * -1;
+        var H = pad(Math.trunc(minutes / 60));
+        var i = pad(Math.abs(minutes % 60));
+        return (minutes < 0 ? "" : "+") + H + ":" + i;
+    }
+    // ts: Date object
+    return function(ts) {
+        var Y = ts.getFullYear();
+        var m = pad(ts.getMonth()+1);
+        var d = pad(ts.getDate());
+        var H = pad(ts.getHours());
+        var i = pad(ts.getMinutes());
+        var s = pad(ts.getSeconds());
+        var P = timezone(ts);
+        return Y + "-" + m + "-" + d + "T" + H + ":" + i + ":" + s + "" + P;
+    };
+})();
+ 
+// -------------------
+var rawData;
+var alliMap;
+var alliData;
+var selectedQuantity = "land";
+var forceYaxisMinZero = true;
+var yLabel = "Land";
+
+function alliName(id) {
+    return alliMap[id] + " (#" + id + ")";
+}
+
+function q(d) {
+    return d.count > 0 ? d.value : null;
+}
+
+// Chart ----------------------------------------
+var margin = {top: 20, right: 230, bottom: 30, left: 50};
+var width = 900 - margin.left - margin.right;
+var height = 600 - margin.top - margin.bottom;
+
+var x = d3.scale.linear()
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .range([height, 0]);
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .tickFormat(d3.format("s"))
+    .orient("left");
+
+var line = d3.svg.line()
+    .defined(function(d) { return d.count > 0; })
+    .x(function(d) { return x(d.tick); })
+    .y(function(d) { return y(q(d)); });
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+function drawXAxis(w, h) {
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + h + ")")
+        .call(xAxis)
+        .append("text")
+        .attr("x", w)
+        .attr("y", 20)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Tick");
+}
+
+function drawYAxis(w, h) {
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis);
+}
+
+function drawGrid(w, h) {
+    svg.selectAll("line.horizontalGrid").remove();
+    svg.selectAll("line.horizontalGrid")
+        .data(y.ticks().slice(1))
+        .enter()
+        .append("line")
+        .attr({
+            class: "horizontalGrid",
+            "stroke-dasharray": "5, 5",
+            x1: 0,
+            x2: w,
+            y1: function(d) { return y(d); },
+            y2: function(d) { return y(d); }
+        });
+
+    svg.selectAll("line.verticalGrid").remove();
+    svg.selectAll("line.verticalGrid")
+        .data(xAxis.tickValues().slice(1))
+        .enter()
+        .append("line")
+        .attr({
+            class: "verticalGrid",
+            "stroke-dasharray": "5, 5",
+            x1: function(d) { return x(d); },
+            x2: function(d) { return x(d); },
+            y1: 0,
+            y2: h
+        });
+}
+
+drawXAxis(width, height);
+drawYAxis(width, height);
+
+function resize(w, h) {
+    w -= (margin.left + margin.right);
+    h -= (margin.top + margin.bottom);
+    width = w;
+    height = h;
+    x.range([0, w]);
+    y.range([h, 0]);
+    d3.select("body > svg")
+        .attr("width", w + margin.left + margin.right)
+        .attr("height", h + margin.top + margin.bottom);
+
+    svg.select("g.x.axis").remove();
+    drawXAxis(w, h);
+    drawGrid(w, h);
+}
+
+// Controller -------------------------------
+var controller = (function() {
+    var container = d3.select("body").append("div")
+        .attr("id", "controllers");
+    // Age
+    var age = container.append("fieldset");
+    age.append("legend").text("Data");
+    age.append("select")
+        .on("change", function(d) {
+            selectDataFile(this.value);
+        })
+        .selectAll("option")
+        .data(dataFiles)
+        .enter()
+        .append("option")
+        .attr("value", function(d) { return d.value; })
+        .text(function(d) { return d.name; });
+
+    // What data to show
+    age.append("select")
+        .on("change", function(d) {
+            selectedQuantity = this.value;
+            if (yLabel != "Count") {
+                yLabel = ucfirst(selectedQuantity);
+            }
+            update();
+        })
+        .selectAll("option")
+        .data([
+            {name: "Land", value: "land"},
+            {name: "Fame", value: "fame"},
+            {name: "Strength", value: "strength"},
+            {name: "Kills", value: "kills"},
+         /* {name: "Count", value: "count"}, */
+        ])
+        .enter()
+        .append("option")
+        .attr("value", function(d) { return d.value; })
+        .text(function(d) { return d.name; });
+    
+    var ts = age.append("p");
+
+    // Alliance
+    var alli = container.append("fieldset");
+    alli.append("legend").text("Alliances");
+    alli.append("select")
+        .attr("multiple", "multiple")
+        .on("change", function(d) {
+            var ids = [];
+            d3.select(this).selectAll("option").each(function() {
+                if (this.selected) {
+                    ids.push(+this.value);
+                }
+            });
+            filters.alliIds = ids;
+            update();
+        });
+
+    // Grouping
+    var group = container.append("fieldset");
+    group.append("legend").text("Group By");
+    group.append("select")
+        .on("change", function(d) {
+            var val = +this.value;
+            switch (val) {
+                case 0:
+                    filters.group.by = null;
+                    break;
+                case 1:
+                    filters.group.by = "alli_id";
+                    break;
+                case 2:
+                    filters.group.by = "race";
+                    break;
+                case 3:
+                    filters.group.by.all();
+                    break;
+                default:
+                    throw "invalid value " + val;
+            }
+            update();
+        })
+        .selectAll("option")
+        .data([
+            {name: "Tribe", value: 0},
+            {name: "Alliance", value: 1},
+            {name: "Race", value: 2},
+            {name: "Game", value: 3}
+        ])
+        .enter()
+        .append("option")
+        .attr("value", function(d) { return d.value; })
+        .text(function(d) { return d.name; });
+
+    // Function on the grouping ui
+    group.append("select")
+        .on("change", function(d) {
+            var val = +this.value;
+            switch (val) {
+                case 0:
+                    filters.group.func.sum();
+                    break;
+                case 1:
+                    filters.group.func.mean();
+                    break;
+                case 2:
+                    filters.group.func.median();
+                    break;
+                case 3:
+                    filters.group.func.count();
+                    break;
+                case 4:
+                    filters.group.func.max();
+                    break;
+                default:
+                    throw "invalid value " + val;
+            }
+            if (val === 3) {
+                yLabel = "Count";
+            } else {
+                yLabel = ucfirst(selectedQuantity);
+            }
+            update();
+        })
+        .selectAll("option")
+        .data([
+            {name: "Sum", value: 0},
+            {name: "Mean", value: 1},
+            {name: "Median", value: 2},
+            {name: "Max", value: 4},
+            {name: "Count", value: 3}
+        ])
+        .enter()
+        .append("option")
+        .attr("value", function(d) { return d.value; })
+        .text(function(d) { return d.name; });
+
+    var misc = container.append("fieldset");
+    misc.append("legend").text("Misc");
+    misc.append("label")
+        .text("Include Protected")
+        .append("input")
+        .attr("type", "checkbox")
+        .attr("checked", filters.includeProtected ? "" : null)
+        .on("change", function(d) {
+            filters.includeProtected = this.checked;
+            update();
+        });
+    misc.append("label")
+        .text("Y-axis min = 0")
+        .append("input")
+        .attr("type", "checkbox")
+        .attr("checked", forceYaxisMinZero ? "" : null)
+        .on("change", function(d) {
+            forceYaxisMinZero = this.checked;
+            update();
+        });
+
+    // Always display labels?
+    var display = container.append("fieldset");
+    display.append("legend").text("Display");
+    var rules = {};
+    rules.labels = getCssRule(".name");
+    display.append("label")
+        .text("Show Labels")
+        .append("input")
+        .attr("type", "checkbox")
+        .attr("checked", rules.labels.style.visibility != "hidden" ? "" : null)
+        .on("change", function(d) {
+            if (this.checked) {
+                rules.labels.style.visibility = "visible";
+            } else {
+                rules.labels.style.visibility = "hidden";
+            }
+        });
+
+    rules.hgrid = getCssRule(".horizontalGrid");
+    rules.vgrid = getCssRule(".verticalGrid");
+    display.append("label")
+        .text("Show Grid")
+        .append("input")
+        .attr("type", "checkbox")
+        .attr("checked", rules.hgrid.style.visibility != "hidden" ? "" : null)
+        .on("change", function(d) {
+            if (this.checked) {
+                rules.hgrid.style.visibility = "visible";
+                rules.vgrid.style.visibility = "visible";
+            } else {
+                rules.hgrid.style.visibility = "hidden";
+                rules.vgrid.style.visibility = "hidden";
+            }
+        });
+
+    display.append("label")
+        .append("button")
+            .text("Resize to fit")
+            .on("click", function() {
+                resize(window.innerWidth, window.innerHeight - 150);
+                update();
+            });
+
+    return function(data, meta) {
+        alli.select("select").selectAll("option").remove();
+        alli.select("select").selectAll("option")
+            .data(alliData)
+            .enter()
+            .append("option")
+            .attr("value", function(d) { return d.key; } )
+            .text(function(d) { return d.value + " (#" + d.key + ")"; });
+
+        ts.datum(meta.created)
+            .text(function(unixTS) {
+                return dateFormatter(new Date(unixTS*1000));
+            });
+    }
+})();
+
+function update() {
+    var data = filters.run(rawData);
+
+    var xMin = d3.min(data, function(d) {
+        return d3.min(d, function(d) { return d.tick; });
+    });
+    var xMax = d3.max(data, function(d) {
+        return d3.max(d, function(d) { return d.tick; });
+    });
+    var yMin = 0;
+    if (!forceYaxisMinZero) {
+        yMin = d3.min(data, function(d) {
+            return d3.min(d, function(d) { return q(d); });
+        });
+    }
+    var yMax = d3.max(data, function(d) {
+        return d3.max(d, function(d) { return q(d); });
+    });
+    x.domain([xMin, xMax]);
+    y.domain([yMin, yMax]);
+
+    var xAxisSpacing = 24;
+    xAxis.tickValues(d3.range(
+        Math.trunc(xMin/xAxisSpacing)*xAxisSpacing,
+        Math.trunc(1+xMax/xAxisSpacing)*xAxisSpacing,
+        xAxisSpacing
+    ));
+
+    drawGrid(width, height);
+
+    svg.selectAll("g.x.axis").call(xAxis);
+    svg.selectAll("g.y.axis").call(yAxis);
+
+    var color = d3.scale.category10();
+
+    svg.select("g.y.axis > text").remove();
+    svg.select("g.y.axis")
+        .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text(yLabel);
+
+    svg.selectAll(".item").remove();
+    var items = svg.selectAll(".item")
+        .data(data);
+
+    items.enter().append("g")
+        .attr("class", "item");
+
+    // Lines
+    items.append("path")
+        .attr("class", "line")
+        .attr("d", line)
+        .style("stroke", function(d, i) { return color(i); });
+
+    // Labels - matched at end of lines
+    items.append("text")
+        .datum(function(d) {
+            var i = d.length - 1;
+            var last = d[i];
+            while (last.count == 0 && i >= 0) {
+                last = d[i--];
+            }
+            return {
+                name: last.label,
+                tick: last.tick,
+                value: q(last)
+            }
+        })
+        .attr("transform", function(d) { return "translate(" + x(d.tick) + "," + y(d.value) + ")"; })
+        .attr("x", 3)
+        .attr("dy", ".35em")
+        .attr("class", "name")
+        .text(function(d) { return d.name });
+
+    items.on("mouseover", function(d) {
+        var item = d3.select(this);
+        item.moveToFront();
+        item.select(".line").style("stroke-width", "5px");
+        item.select(".name").style("visibility", "visible");
+    });
+
+    items.on("mouseover", function(d) {
+        var item = d3.select(this);
+        item.classed("hover", true);
+    });
+
+    items.on("click", function(d) {
+        var item = d3.select(this);
+        item.moveToFront();
+        item.classed("marked", !item.classed("marked"));
+    });
+
+    items.on("mouseout", function(d) {
+        var item = d3.select(this);
+        item.classed("hover", false);
+    });
+}
+
+function selectDataFile(file) {
+    d3.json(file, function(error, data) {
+        if (error) throw error;
+        rawData = data.data;
+        alliMap = data.meta.alliances;
+        alliData = [];
+        for (var key in alliMap) {
+            alliData.push({key: key, value: data.meta.alliances[key]});
+        }
+        controller(rawData, data.meta);
+        update();
+    });
+}
+
+selectDataFile(dataFiles[0].value);
+
+</script>
+</body>
+</html>
